@@ -94,6 +94,20 @@ int s2n_record_parse_test(struct s2n_connection *conn,
     GUARD(s2n_stuffer_reread(&conn->in));
     GUARD(s2n_stuffer_reread(&conn->header_in));
 
+    /* Skip the IV, if any */
+    if (cipher_suite->record_alg->cipher->type == S2N_CBC && conn->actual_protocol_version > S2N_TLS10) {
+        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.cbc.record_iv_size));
+    } else if (cipher_suite->record_alg->cipher->type == S2N_AEAD && conn->actual_protocol_version >= S2N_TLS12) {
+        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.aead.record_iv_size));
+    } else if (cipher_suite->record_alg->cipher->type == S2N_COMPOSITE && conn->actual_protocol_version > S2N_TLS10) {
+        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.comp.record_iv_size));
+    }
+
+    /* Truncate and wipe the MAC and any padding */
+    //    GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
+    conn->in_status = PLAINTEXT;
+
+    
     return 0;
 
 }
