@@ -31,16 +31,29 @@
 #include "crypto/s2n_cipher.h"
 
 int s2n_record_parse_test(struct s2n_connection *conn,
-			  const struct s2n_cipher_suite *cipher_suite,
 			  uint8_t* header,
-			  //struct s2n_blob en,
-			  struct s2n_hmac_state *mac,
-			  int payload_length,
-			  uint8_t* sequence_number
+			  int payload_length
 			  )
 {
-  struct s2n_blob en;
 
+    struct s2n_blob iv;
+    struct s2n_blob en;
+    struct s2n_blob aad;
+    uint8_t content_type;
+    uint16_t fragment_length;
+    uint8_t ivpad[S2N_TLS_MAX_IV_LEN];
+    uint8_t aad_gen[S2N_TLS_MAX_AAD_LEN] = { 0 };
+    uint8_t aad_iv[S2N_TLS_MAX_IV_LEN] = { 0 };
+
+    uint8_t *sequence_number = conn->client->client_sequence_number;
+    struct s2n_hmac_state *mac = &conn->client->client_record_mac;
+    //struct s2n_session_key *session_key = &conn->client->client_key;
+    const struct s2n_cipher_suite *cipher_suite = conn->client->cipher_suite;
+    //uint8_t *implicit_iv = conn->client->client_implicit_iv;
+
+
+
+  
 
   //L271 of original
  /* Subtract the padding length */
@@ -117,7 +130,7 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad)
   uint8_t header[S2N_TLS_RECORD_HEADER_LENGTH];
   //increment sequence number does work based on the value here
   //needs to be public_in
-  uint8_t sequence_number[S2N_TLS_SEQUENCE_NUM_LEN];
+  //uint8_t sequence_number[S2N_TLS_SEQUENCE_NUM_LEN];
   
   struct s2n_hmac_state hmac = {
     .alg = S2N_HMAC_SHA1,
@@ -151,9 +164,40 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad)
     .record_alg = &record_algorithm,
   };
 
+  struct s2n_crypto_parameters client = {
+    //.client_sequence_number = sequence_number,
+    .client_record_mac = {
+      .alg = S2N_HMAC_SHA1,
+      .hash_block_size = BLOCK_SIZE,
+      .currently_in_hash_block = 0,
+      .digest_size = SHA_DIGEST_LENGTH,
+      .xor_pad_size = BLOCK_SIZE,
+      .inner.alg = S2N_HASH_SHA1,
+      .inner.currently_in_hash_block = 0,
+      .inner_just_key.alg = S2N_HASH_SHA1,
+      .inner_just_key.currently_in_hash_block = 0,
+      .outer.alg = S2N_HASH_SHA1,
+      .outer.currently_in_hash_block = 0,
+      .outer_just_key.alg = S2N_HASH_SHA1,
+      .outer_just_key.currently_in_hash_block = 0,
+      .xor_pad = *xor_pad,
+      //xor_pad is an array
+      .digest_pad = *digest_pad
+    },
+    .cipher_suite = &cipher_suite,
+  };
+
+    /* uint8_t *sequence_number = conn->client->client_sequence_number; */
+    /* struct s2n_hmac_state *mac = &conn->client->client_record_mac; */
+    /* struct s2n_session_key *session_key = &conn->client->client_key; */
+    /* const struct s2n_cipher_suite *cipher_suite = conn->client->cipher_suite; */
+    /* uint8_t *implicit_iv = conn->client->client_implicit_iv; */
+
+  
   struct s2n_connection conn = {
     .actual_protocol_version = S2N_TLS12,
+    .client = &client,
   };
   
-  return s2n_record_parse_test(&conn, &cipher_suite, header, &hmac, payload_length, sequence_number);
+  return s2n_record_parse_test(&conn, header, payload_length);
 }
