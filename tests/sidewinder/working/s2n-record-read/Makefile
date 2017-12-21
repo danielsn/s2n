@@ -10,8 +10,9 @@ cflags += -I$(CURDIR)/../../../../api/
 cflags += -fPIC -std=c99 -fgnu89-inline
 extras += crypto/s2n_hmac.c  crypto/s2n_hash.c  utils/s2n_safety.c tls/s2n_cbc.c stuffer/s2n_stuffer.c
 goals  += s2n_record_parse_wrapper@s2n_record_read_wrapper.c
+#goals += test_leakage@s2n_record_read_wrapper.c
 full_self_comp += true
 smtlog += p.smt2
 shadowingArgs += "self_comp_mode=full,branchcond_assertion=assert_never,memory_assertion=assert_never"
 timing += true
-#printModel += true
+printModel += true

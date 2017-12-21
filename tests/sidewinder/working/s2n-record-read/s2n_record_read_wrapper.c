@@ -15,6 +15,7 @@
 
 #include <sys/param.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "crypto/s2n_hmac.h"
 
@@ -28,11 +29,26 @@
 #include "sidewinder.h"
 #include "utils/s2n_safety.h"
 #include "tls/s2n_cipher_suites.h"
+#include "utils/s2n_blob.h"
 #include "crypto/s2n_cipher.h"
+
+#define DECRYPT_COST 10
+int decrypt_cbc(struct s2n_session_key *session_key,
+		struct s2n_blob* iv,
+		struct s2n_blob* in,
+		struct s2n_blob* out)
+
+{
+  int size = in->size;
+  __VERIFIER_ASSUME_LEAKAGE(size * DECRYPT_COST);
+  out->data = malloc(size);
+  return 0;
+}
 
 int s2n_record_parse_test(struct s2n_connection *conn,
 			  uint8_t* header,
-			  int payload_length
+			  int payload_length,
+			  int packet_size
 			  )
 {
 
@@ -47,12 +63,62 @@ int s2n_record_parse_test(struct s2n_connection *conn,
 
     uint8_t *sequence_number = conn->client->client_sequence_number;
     struct s2n_hmac_state *mac = &conn->client->client_record_mac;
-    //struct s2n_session_key *session_key = &conn->client->client_key;
+    struct s2n_session_key *session_key = &conn->client->client_key;
     const struct s2n_cipher_suite *cipher_suite = conn->client->cipher_suite;
-    //uint8_t *implicit_iv = conn->client->client_implicit_iv;
+    uint8_t *implicit_iv = conn->client->client_implicit_iv;
 
+    en.size = packet_size;
+    decrypt_cbc(session_key, &iv, &en, &en);
 
+    /* Decrypt stuff! */
+    switch (cipher_suite->record_alg->cipher->type) {
+        case S2N_STREAM:
+            GUARD(cipher_suite->record_alg->cipher->io.stream.decrypt(session_key, &en, &en));
+            break;
+        case S2N_CBC:
+            /* Check that we have some data to decrypt */
+            ne_check(en.size, 0);
 
+            /* ... and that we have a multiple of the block size */
+            eq_check(en.size % iv.size, 0);
+
+            /* Copy the last encrypted block to be the next IV */
+            if (conn->actual_protocol_version < S2N_TLS11) {
+                memcpy_check(ivpad, en.data + en.size - iv.size, iv.size);
+            }
+
+            GUARD(cipher_suite->record_alg->cipher->io.cbc.decrypt(session_key, &iv, &en, &en));
+
+            if (conn->actual_protocol_version < S2N_TLS11) {
+                memcpy_check(implicit_iv, ivpad, iv.size);
+            }
+            break;
+        case S2N_AEAD:
+            /* Skip explicit IV for decryption */
+            en.size -= cipher_suite->record_alg->cipher->io.aead.record_iv_size;
+            en.data += cipher_suite->record_alg->cipher->io.aead.record_iv_size;
+
+            /* Check that we have some data to decrypt */
+            ne_check(en.size, 0);
+
+            GUARD(cipher_suite->record_alg->cipher->io.aead.decrypt(session_key, &iv, &aad, &en, &en));
+            break;
+        case S2N_COMPOSITE:
+            ne_check(en.size, 0);
+            eq_check(en.size % iv.size,  0);
+
+            /* Copy the last encrypted block to be the next IV */
+            memcpy_check(ivpad, en.data + en.size - iv.size, iv.size);
+
+            /* This will: Skip the explicit IV(if applicable), decrypt the payload, verify the MAC and padding. */
+            GUARD((cipher_suite->record_alg->cipher->io.comp.decrypt(session_key, &iv, &en, &en)));
+
+            memcpy_check(implicit_iv, ivpad, iv.size);
+            break;
+        default:
+            S2N_ERROR(S2N_ERR_CIPHER_TYPE);
+            break;
+    }
   
 
   //L271 of original
@@ -117,7 +183,7 @@ int s2n_record_parse_test(struct s2n_connection *conn,
     }
 
     /* Truncate and wipe the MAC and any padding */
-    //    GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
+    //        GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
     conn->in_status = PLAINTEXT;
 
     
@@ -125,8 +191,13 @@ int s2n_record_parse_test(struct s2n_connection *conn,
 
 }
 
-int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad)
+
+
+int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
+			     int packet_size)
 {
+  __VERIFIER_ASSERT_MAX_LEAKAGE(68);
+  public_in(__SMACK_value(packet_size));
   uint8_t header[S2N_TLS_RECORD_HEADER_LENGTH];
   //increment sequence number does work based on the value here
   //needs to be public_in
@@ -151,9 +222,13 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad)
     .digest_pad = *digest_pad
   };
 
+  struct s2n_cbc_cipher cbc = {
+    .decrypt = decrypt_cbc,
+  };
 
   struct s2n_cipher cipher = {
     .type = S2N_CBC,
+    .io.cbc.decrypt = decrypt_cbc,
   };
   
   struct s2n_record_algorithm record_algorithm = {
@@ -198,6 +273,26 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad)
     .actual_protocol_version = S2N_TLS12,
     .client = &client,
   };
+
+   struct s2n_blob en;
   
-  return s2n_record_parse_test(&conn, header, payload_length);
+   return s2n_record_parse_test(&conn, header, payload_length, packet_size);
+}
+
+#define SIZE  10
+int test_leakage_impl(struct s2n_blob* blob){
+  __VERIFIER_ASSUME_LEAKAGE(blob->data[blob->size]);
+  return 0;
+}
+
+int test_leakage(int length, int val, uint8_t* data) {
+  public_in(__SMACK_value(data));
+  public_in(__SMACK_value(length));
+  public_in(__SMACK_value(val));
+  struct s2n_blob blob =  {.size = length, .data=data};
+  data[length] = val;
+  decrypt_cbc(0, 0, &blob, &blob);
+  blob.data[length] = val;
+  test_leakage_impl(&blob);
+  
 }
