@@ -15,25 +15,23 @@
 
 #pragma once
 
-#include <string.h>
+//#include <string.h>
 #include <sys/types.h>
 #include <stdint.h>
 
 #include "error/s2n_errno.h"
+#include "s2n_annotations.h"
+#include "sidewinder.h"
 
 void __VERIFIER_assume(int);
 
 /* NULL check a pointer */
 #define notnull_check( ptr )           do { if ( (ptr) == NULL ) { S2N_ERROR(S2N_ERR_NULL); } } while(0)
+#define MEMCOPY_COST 2
 
 static inline void* trace_memcpy_check(void *restrict to, const void *restrict from, size_t size, const char *debug_str)
 {
-    if (to == NULL || from == NULL) {
-        s2n_errno = S2N_ERR_NULL;
-        s2n_debug_str = debug_str;
-        return NULL;
-    }
-
+    __VERIFIER_ASSUME_LEAKAGE(size * MEMCOPY_COST);
     return memcpy(to, from, size);
 }
 
@@ -41,14 +39,10 @@ static inline void* trace_memcpy_check(void *restrict to, const void *restrict f
  */
 #define memcpy_check( d, s, n )                                             \
   do {                                                                      \
-    __typeof( n ) __tmp_n = ( n );                                          \
-    if ( __tmp_n ) {                                                        \
-      void *r = trace_memcpy_check( (d), (s) , (__tmp_n), _S2N_DEBUG_LINE); \
-      if (r == NULL) { return -1; }                                         \
-    }                                                                       \
+    memcpy(d,s,n);							\
   } while(0)
 
-#define memset_check( d, c, n )                                             \
+#define memset_check( d, c, n )						\
   do {                                                                      \
     __typeof( n ) __tmp_n = ( n );                                          \
     if ( __tmp_n ) {                                                        \
