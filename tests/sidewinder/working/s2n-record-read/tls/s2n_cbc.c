@@ -13,6 +13,5 @@ int s2n_verify_cbc(struct s2n_connection *conn, struct s2n_hmac_state *hmac, str
   __VERIFIER_assume(leakage >= 0);
   __VERIFIER_assume(leakage < MAX_LEAKAGE_DIFFERENCE);
   __VERIFIER_ASSUME_LEAKAGE(leakage);
-  //__VERIFIER_assert(leakage == 8);
   return 0;
 }

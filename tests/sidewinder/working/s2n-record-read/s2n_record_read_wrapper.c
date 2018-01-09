@@ -33,6 +33,7 @@
 #include "crypto/s2n_cipher.h"
 
 #define DECRYPT_COST 10
+#define IV_SIZE 16
 int decrypt_cbc(struct s2n_session_key *session_key,
 		struct s2n_blob* iv,
 		struct s2n_blob* in,
@@ -45,6 +46,8 @@ int decrypt_cbc(struct s2n_session_key *session_key,
   return 0;
 }
 
+#
+
 int s2n_record_parse_test(struct s2n_connection *conn,
 			  uint8_t* header,
 			  int payload_length,
@@ -53,7 +56,10 @@ int s2n_record_parse_test(struct s2n_connection *conn,
 {
 
     struct s2n_blob iv;
+    iv.size = IV_SIZE;//DSN trying to fix bad memcopy
+    __VERIFIER_ASSUME(packet_size > IV_SIZE);
     struct s2n_blob en;
+    en.data = malloc(packet_size);
     struct s2n_blob aad;
     uint8_t content_type;
     uint16_t fragment_length;
@@ -68,8 +74,8 @@ int s2n_record_parse_test(struct s2n_connection *conn,
     uint8_t *implicit_iv = conn->client->client_implicit_iv;
 
     en.size = packet_size;
-    decrypt_cbc(session_key, &iv, &en, &en);
 
+    //Line 222
     /* Decrypt stuff! */
     switch (cipher_suite->record_alg->cipher->type) {
         case S2N_STREAM:
@@ -84,13 +90,13 @@ int s2n_record_parse_test(struct s2n_connection *conn,
 
             /* Copy the last encrypted block to be the next IV */
             if (conn->actual_protocol_version < S2N_TLS11) {
-                memcpy_check(ivpad, en.data + en.size - iv.size, iv.size);
+	       memcpy_check(ivpad, en.data + en.size - iv.size, iv.size);
             }
 
             GUARD(cipher_suite->record_alg->cipher->io.cbc.decrypt(session_key, &iv, &en, &en));
 
             if (conn->actual_protocol_version < S2N_TLS11) {
-                memcpy_check(implicit_iv, ivpad, iv.size);
+	      memcpy_check(implicit_iv, ivpad, iv.size);
             }
             break;
         case S2N_AEAD:
@@ -197,6 +203,7 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
 			     int packet_size)
 {
   __VERIFIER_ASSERT_MAX_LEAKAGE(68);
+  __VERIFIER_assume(packet_size < 1024);
   public_in(__SMACK_value(packet_size));
   uint8_t header[S2N_TLS_RECORD_HEADER_LENGTH];
   //increment sequence number does work based on the value here
@@ -270,7 +277,7 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
 
   
   struct s2n_connection conn = {
-    .actual_protocol_version = S2N_TLS12,
+    .actual_protocol_version = S2N_TLS10,
     .client = &client,
   };
 
