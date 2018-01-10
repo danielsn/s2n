@@ -8,7 +8,7 @@ cflags += -I$(CURDIR)/../../../../
 #/api .h that haven't fixed that
 cflags += -I$(CURDIR)/../../../../api/
 cflags += -fPIC -std=c99 -fgnu89-inline
-extras += crypto/s2n_hmac.c  crypto/s2n_hash.c  utils/s2n_safety.c tls/s2n_cbc.c stuffer/s2n_stuffer.c
+extras += crypto/s2n_hmac.c  crypto/s2n_hash.c  utils/s2n_safety.c tls/s2n_cbc.c stuffer/s2n_stuffer.c utils/s2n_mem.c tls/s2n_aead.c
 goals  += s2n_record_parse_wrapper@s2n_record_read_wrapper.c
 #goals += test_leakage@s2n_record_read_wrapper.c
 full_self_comp += true

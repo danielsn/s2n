@@ -75,6 +75,49 @@ int s2n_record_parse_test(struct s2n_connection *conn,
 
     en.size = packet_size;
 
+        /* In AEAD mode, the explicit IV is in the record */
+    if (cipher_suite->record_alg->cipher->type == S2N_AEAD) {
+        gte_check(en.size, cipher_suite->record_alg->cipher->io.aead.record_iv_size);
+
+        struct s2n_stuffer iv_stuffer;
+        iv.data = aad_iv;
+        iv.size = sizeof(aad_iv);
+
+        GUARD(s2n_stuffer_init(&iv_stuffer, &iv));
+
+        if (cipher_suite->record_alg->flags & S2N_TLS12_AES_GCM_AEAD_NONCE) {
+            /* Partially explicit nonce. See RFC 5288 Section 3 */
+            GUARD(s2n_stuffer_write_bytes(&iv_stuffer, implicit_iv, cipher_suite->record_alg->cipher->io.aead.fixed_iv_size));
+            GUARD(s2n_stuffer_write_bytes(&iv_stuffer, en.data, cipher_suite->record_alg->cipher->io.aead.record_iv_size));
+        } else if (cipher_suite->record_alg->flags & S2N_TLS12_CHACHA_POLY_AEAD_NONCE) {
+            /* Fully implicit nonce. See RFC 7905 Section 2 */
+            uint8_t four_zeroes[4] = { 0 };
+            GUARD(s2n_stuffer_write_bytes(&iv_stuffer, four_zeroes, 4));
+            GUARD(s2n_stuffer_write_bytes(&iv_stuffer, sequence_number, S2N_TLS_SEQUENCE_NUM_LEN));
+            for(int i = 0; i < cipher_suite->record_alg->cipher->io.aead.fixed_iv_size; i++) {
+                aad_iv[i] = aad_iv[i] ^ implicit_iv[i];
+            }
+        } else {
+            S2N_ERROR(S2N_ERR_INVALID_NONCE_TYPE);
+        }
+
+        /* Set the IV size to the amount of data written */
+        iv.size = s2n_stuffer_data_available(&iv_stuffer);
+
+        aad.data = aad_gen;
+        aad.size = sizeof(aad_gen);
+
+        /* remove the AEAD overhead from the record size */
+        gte_check(payload_length, cipher_suite->record_alg->cipher->io.aead.record_iv_size + cipher_suite->record_alg->cipher->io.aead.tag_size);
+        payload_length -= cipher_suite->record_alg->cipher->io.aead.record_iv_size;
+        payload_length -= cipher_suite->record_alg->cipher->io.aead.tag_size;
+
+        struct s2n_stuffer ad_stuffer;
+        GUARD(s2n_stuffer_init(&ad_stuffer, &aad));
+        GUARD(s2n_aead_aad_init(conn, sequence_number, content_type, payload_length, &ad_stuffer));
+    }
+
+    
     //Line 222
     /* Decrypt stuff! */
     switch (cipher_suite->record_alg->cipher->type) {
