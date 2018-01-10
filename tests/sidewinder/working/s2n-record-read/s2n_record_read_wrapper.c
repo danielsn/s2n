@@ -46,7 +46,30 @@ int decrypt_cbc(struct s2n_session_key *session_key,
   return 0;
 }
 
-#
+int decrypt_stream(struct s2n_session_key *session_key,
+		   struct s2n_blob* in,
+		   struct s2n_blob* out)
+
+{
+  int size = in->size;
+  __VERIFIER_ASSUME_LEAKAGE(size * DECRYPT_COST);
+  out->data = malloc(size);
+  return 0;
+}
+
+int decrypt_aead(struct s2n_session_key *session_key,
+		struct s2n_blob* iv,
+		struct s2n_blob* aad,
+		struct s2n_blob* in,
+		struct s2n_blob* out)
+
+{
+  int size = in->size;
+  __VERIFIER_ASSUME_LEAKAGE(size * DECRYPT_COST);
+  out->data = malloc(size);
+  return 0;
+}
+
 
 int s2n_record_parse_test(struct s2n_connection *conn,
 			  uint8_t* header,
@@ -64,8 +87,8 @@ int s2n_record_parse_test(struct s2n_connection *conn,
     uint8_t content_type;
     uint16_t fragment_length;
     uint8_t ivpad[S2N_TLS_MAX_IV_LEN];
-    uint8_t aad_gen[S2N_TLS_MAX_AAD_LEN] = { 0 };
-    uint8_t aad_iv[S2N_TLS_MAX_IV_LEN] = { 0 };
+    uint8_t aad_gen[S2N_TLS_MAX_AAD_LEN];// = { 0 };
+    uint8_t aad_iv[S2N_TLS_MAX_IV_LEN];// = { 0 };
 
     uint8_t *sequence_number = conn->client->client_sequence_number;
     struct s2n_hmac_state *mac = &conn->client->client_record_mac;
@@ -75,49 +98,6 @@ int s2n_record_parse_test(struct s2n_connection *conn,
 
     en.size = packet_size;
 
-        /* In AEAD mode, the explicit IV is in the record */
-    if (cipher_suite->record_alg->cipher->type == S2N_AEAD) {
-        gte_check(en.size, cipher_suite->record_alg->cipher->io.aead.record_iv_size);
-
-        struct s2n_stuffer iv_stuffer;
-        iv.data = aad_iv;
-        iv.size = sizeof(aad_iv);
-
-        GUARD(s2n_stuffer_init(&iv_stuffer, &iv));
-
-        if (cipher_suite->record_alg->flags & S2N_TLS12_AES_GCM_AEAD_NONCE) {
-            /* Partially explicit nonce. See RFC 5288 Section 3 */
-            GUARD(s2n_stuffer_write_bytes(&iv_stuffer, implicit_iv, cipher_suite->record_alg->cipher->io.aead.fixed_iv_size));
-            GUARD(s2n_stuffer_write_bytes(&iv_stuffer, en.data, cipher_suite->record_alg->cipher->io.aead.record_iv_size));
-        } else if (cipher_suite->record_alg->flags & S2N_TLS12_CHACHA_POLY_AEAD_NONCE) {
-            /* Fully implicit nonce. See RFC 7905 Section 2 */
-            uint8_t four_zeroes[4] = { 0 };
-            GUARD(s2n_stuffer_write_bytes(&iv_stuffer, four_zeroes, 4));
-            GUARD(s2n_stuffer_write_bytes(&iv_stuffer, sequence_number, S2N_TLS_SEQUENCE_NUM_LEN));
-            for(int i = 0; i < cipher_suite->record_alg->cipher->io.aead.fixed_iv_size; i++) {
-                aad_iv[i] = aad_iv[i] ^ implicit_iv[i];
-            }
-        } else {
-            S2N_ERROR(S2N_ERR_INVALID_NONCE_TYPE);
-        }
-
-        /* Set the IV size to the amount of data written */
-        iv.size = s2n_stuffer_data_available(&iv_stuffer);
-
-        aad.data = aad_gen;
-        aad.size = sizeof(aad_gen);
-
-        /* remove the AEAD overhead from the record size */
-        gte_check(payload_length, cipher_suite->record_alg->cipher->io.aead.record_iv_size + cipher_suite->record_alg->cipher->io.aead.tag_size);
-        payload_length -= cipher_suite->record_alg->cipher->io.aead.record_iv_size;
-        payload_length -= cipher_suite->record_alg->cipher->io.aead.tag_size;
-
-        struct s2n_stuffer ad_stuffer;
-        GUARD(s2n_stuffer_init(&ad_stuffer, &aad));
-        GUARD(s2n_aead_aad_init(conn, sequence_number, content_type, payload_length, &ad_stuffer));
-    }
-
-    
     //Line 222
     /* Decrypt stuff! */
     switch (cipher_suite->record_alg->cipher->type) {
@@ -143,10 +123,10 @@ int s2n_record_parse_test(struct s2n_connection *conn,
             }
             break;
         case S2N_AEAD:
+
             /* Skip explicit IV for decryption */
             en.size -= cipher_suite->record_alg->cipher->io.aead.record_iv_size;
             en.data += cipher_suite->record_alg->cipher->io.aead.record_iv_size;
-
             /* Check that we have some data to decrypt */
             ne_check(en.size, 0);
 
@@ -246,8 +226,14 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
 			     int packet_size)
 {
   __VERIFIER_ASSERT_MAX_LEAKAGE(68);
+  __VERIFIER_assume(packet_size > 0);
   __VERIFIER_assume(packet_size < 1024);
+  __VERIFIER_assume(payload_length > 0);
+  __VERIFIER_assume(payload_length <= packet_size);
+  
   public_in(__SMACK_value(packet_size));
+  public_in(__SMACK_value(payload_length));
+  
   uint8_t header[S2N_TLS_RECORD_HEADER_LENGTH];
   //increment sequence number does work based on the value here
   //needs to be public_in
@@ -272,17 +258,30 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
     .digest_pad = *digest_pad
   };
 
-  struct s2n_cbc_cipher cbc = {
-    .decrypt = decrypt_cbc,
-  };
 
-  struct s2n_cipher cipher = {
+  struct s2n_cipher stream_cipher = {
+    .type = S2N_STREAM,
+    .io.stream.decrypt = decrypt_stream,
+  };
+  
+  struct s2n_cipher cbc_cipher = {
     .type = S2N_CBC,
     .io.cbc.decrypt = decrypt_cbc,
   };
+
+  struct s2n_cipher aead_cipher = {
+    .type = S2N_AEAD,
+    .io.aead.decrypt = decrypt_aead,
+    .io.aead.record_iv_size = IV_SIZE,
+  };
+
+  struct s2n_cipher composite_cipher = {
+    .type = S2N_CBC,
+    .io.comp.decrypt = decrypt_cbc,
+  };
   
   struct s2n_record_algorithm record_algorithm = {
-    .cipher = &cipher,
+    .cipher = &composite_cipher,
   };
   
   struct s2n_cipher_suite cipher_suite = {
