@@ -34,6 +34,7 @@
 
 #define DECRYPT_COST 10
 #define IV_SIZE 16
+#define MAX_SIZE 1024
 int decrypt_cbc(struct s2n_session_key *session_key,
 		struct s2n_blob* iv,
 		struct s2n_blob* in,
@@ -74,13 +75,14 @@ int decrypt_aead(struct s2n_session_key *session_key,
 int s2n_record_parse_test(struct s2n_connection *conn,
 			  uint8_t* header,
 			  int payload_length,
-			  int packet_size
+			  int packet_size,
+			  int padding_length
 			  )
 {
 
     struct s2n_blob iv;
     iv.size = IV_SIZE;//DSN trying to fix bad memcopy
-    __VERIFIER_ASSUME(packet_size > IV_SIZE);
+    __VERIFIER_assume(packet_size > IV_SIZE);
     struct s2n_blob en;
     en.data = malloc(packet_size);
     struct s2n_blob aad;
@@ -154,7 +156,10 @@ int s2n_record_parse_test(struct s2n_connection *conn,
  /* Subtract the padding length */
     if (cipher_suite->record_alg->cipher->type == S2N_CBC || cipher_suite->record_alg->cipher->type == S2N_COMPOSITE) {
         gt_check(en.size, 0);
+	en.data[en.size - 1] = padding_length;
         payload_length -= (en.data[en.size - 1] + 1);
+	__VERIFIER_assume(payload_length >= 0);
+	__VERIFIER_assume(payload_length < MAX_SIZE);
     }
 
     uint8_t mac_digest_size = mac->digest_size;
@@ -191,6 +196,8 @@ int s2n_record_parse_test(struct s2n_connection *conn,
         GUARD(s2n_hmac_digest(mac, check_digest, mac_digest_size));
 
         if (s2n_hmac_digest_verify(en.data + payload_length, check_digest, mac_digest_size) < 0) {
+	  __VERIFIER_assume(conn->in->
+	  __VERIFIER_assume(0);
             GUARD(s2n_stuffer_wipe(&conn->in));
             S2N_ERROR(S2N_ERR_BAD_MESSAGE);
         }
@@ -212,7 +219,7 @@ int s2n_record_parse_test(struct s2n_connection *conn,
     }
 
     /* Truncate and wipe the MAC and any padding */
-    //        GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
+    GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
     conn->in_status = PLAINTEXT;
 
     
@@ -222,17 +229,24 @@ int s2n_record_parse_test(struct s2n_connection *conn,
 
 
 
-int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
-			     int packet_size)
+int s2n_record_parse_wrapper(int payload_length,
+			     int *xor_pad,
+			     int * digest_pad,
+			     int packet_size,
+			     int padding_length)
 {
   __VERIFIER_ASSERT_MAX_LEAKAGE(68);
   __VERIFIER_assume(packet_size > 0);
-  __VERIFIER_assume(packet_size < 1024);
+  __VERIFIER_assume(packet_size < MAX_SIZE);
   __VERIFIER_assume(payload_length > 0);
   __VERIFIER_assume(payload_length <= packet_size);
+  __VERIFIER_assume(padding_length >= 0);
+  __VERIFIER_assume(padding_length < 256);
+  __VERIFIER_assume(padding_length < payload_length);
   
   public_in(__SMACK_value(packet_size));
   public_in(__SMACK_value(payload_length));
+  public_in(__SMACK_value(padding_length));
   
   uint8_t header[S2N_TLS_RECORD_HEADER_LENGTH];
   //increment sequence number does work based on the value here
@@ -258,10 +272,10 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
     .digest_pad = *digest_pad
   };
 
-
-  struct s2n_cipher stream_cipher = {
-    .type = S2N_STREAM,
-    .io.stream.decrypt = decrypt_stream,
+  struct s2n_cipher aead_cipher = {
+    .type = S2N_AEAD,
+    .io.aead.decrypt = decrypt_aead,
+    .io.aead.record_iv_size = IV_SIZE,
   };
   
   struct s2n_cipher cbc_cipher = {
@@ -269,19 +283,21 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
     .io.cbc.decrypt = decrypt_cbc,
   };
 
-  struct s2n_cipher aead_cipher = {
-    .type = S2N_AEAD,
-    .io.aead.decrypt = decrypt_aead,
-    .io.aead.record_iv_size = IV_SIZE,
-  };
-
   struct s2n_cipher composite_cipher = {
-    .type = S2N_CBC,
+    .type = S2N_COMPOSITE,
     .io.comp.decrypt = decrypt_cbc,
+  };
+  struct s2n_cipher stream_cipher = {
+    .type = S2N_STREAM,
+    .io.stream.decrypt = decrypt_stream,
   };
   
   struct s2n_record_algorithm record_algorithm = {
-    .cipher = &composite_cipher,
+    //.cipher = &aead_cipher,
+        .cipher = &cbc_cipher,
+    //    .cipher = &composite_cipher,
+    //    .cipher = &stream_cipher,
+
   };
   
   struct s2n_cipher_suite cipher_suite = {
@@ -325,7 +341,7 @@ int s2n_record_parse_wrapper(int payload_length, int *xor_pad, int * digest_pad,
 
    struct s2n_blob en;
   
-   return s2n_record_parse_test(&conn, header, payload_length, packet_size);
+   return s2n_record_parse_test(&conn, header, payload_length, packet_size, padding_length);
 }
 
 #define SIZE  10

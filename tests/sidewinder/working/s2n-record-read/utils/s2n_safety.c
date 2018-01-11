@@ -41,6 +41,7 @@ pid_t s2n_actual_getpid()
 
 void * my_memset ( void * ptr, int value, size_t num ){
   uint8_t* p = (uint8_t*)(ptr);
+  __VERIFIER_assert(num >= 0);
   for(int i =0; i < num; ++i) {
     S2N_INVARIENT(i <= num);
     p[i] = value;
