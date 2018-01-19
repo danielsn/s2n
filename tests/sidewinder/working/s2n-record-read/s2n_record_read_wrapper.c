@@ -76,7 +76,8 @@ int s2n_record_parse_test(struct s2n_connection *conn,
 			  uint8_t* header,
 			  int payload_length,
 			  int packet_size,
-			  int padding_length
+			  int padding_length,
+			  int bytes_remaining
 			  )
 {
 
@@ -156,7 +157,7 @@ int s2n_record_parse_test(struct s2n_connection *conn,
  /* Subtract the padding length */
     if (cipher_suite->record_alg->cipher->type == S2N_CBC || cipher_suite->record_alg->cipher->type == S2N_COMPOSITE) {
         gt_check(en.size, 0);
-	en.data[en.size - 1] = padding_length;
+	en.data[en.size - 1] = padding_length;//DSN fixup for the hmac declassifies padding_length
         payload_length -= (en.data[en.size - 1] + 1);
 	__VERIFIER_assume(payload_length >= 0);
 	__VERIFIER_assume(payload_length < MAX_SIZE);
@@ -196,7 +197,6 @@ int s2n_record_parse_test(struct s2n_connection *conn,
         GUARD(s2n_hmac_digest(mac, check_digest, mac_digest_size));
 
         if (s2n_hmac_digest_verify(en.data + payload_length, check_digest, mac_digest_size) < 0) {
-	  __VERIFIER_assume(conn->in->
 	  __VERIFIER_assume(0);
             GUARD(s2n_stuffer_wipe(&conn->in));
             S2N_ERROR(S2N_ERR_BAD_MESSAGE);
@@ -219,6 +219,8 @@ int s2n_record_parse_test(struct s2n_connection *conn,
     }
 
     /* Truncate and wipe the MAC and any padding */
+    __VERIFIER_assume(s2n_stuffer_data_available(&conn->in) == bytes_remaining);
+
     GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
     conn->in_status = PLAINTEXT;
 
@@ -233,7 +235,8 @@ int s2n_record_parse_wrapper(int payload_length,
 			     int *xor_pad,
 			     int * digest_pad,
 			     int packet_size,
-			     int padding_length)
+			     int padding_length,
+			     int bytes_remaining)
 {
   __VERIFIER_ASSERT_MAX_LEAKAGE(68);
   __VERIFIER_assume(packet_size > 0);
@@ -243,10 +246,11 @@ int s2n_record_parse_wrapper(int payload_length,
   __VERIFIER_assume(padding_length >= 0);
   __VERIFIER_assume(padding_length < 256);
   __VERIFIER_assume(padding_length < payload_length);
-  
+  __VERIFIER_assume(bytes_remaining > payload_length);
   public_in(__SMACK_value(packet_size));
   public_in(__SMACK_value(payload_length));
   public_in(__SMACK_value(padding_length));
+  public_in(__SMACK_value(bytes_remaining));
   
   uint8_t header[S2N_TLS_RECORD_HEADER_LENGTH];
   //increment sequence number does work based on the value here
@@ -294,9 +298,9 @@ int s2n_record_parse_wrapper(int payload_length,
   
   struct s2n_record_algorithm record_algorithm = {
     //.cipher = &aead_cipher,
-        .cipher = &cbc_cipher,
+    //    .cipher = &cbc_cipher,
     //    .cipher = &composite_cipher,
-    //    .cipher = &stream_cipher,
+        .cipher = &stream_cipher,
 
   };
   
@@ -335,29 +339,11 @@ int s2n_record_parse_wrapper(int payload_length,
 
   
   struct s2n_connection conn = {
-    .actual_protocol_version = S2N_TLS10,
+    .actual_protocol_version = S2N_TLS12,
     .client = &client,
   };
 
    struct s2n_blob en;
   
-   return s2n_record_parse_test(&conn, header, payload_length, packet_size, padding_length);
-}
-
-#define SIZE  10
-int test_leakage_impl(struct s2n_blob* blob){
-  __VERIFIER_ASSUME_LEAKAGE(blob->data[blob->size]);
-  return 0;
-}
-
-int test_leakage(int length, int val, uint8_t* data) {
-  public_in(__SMACK_value(data));
-  public_in(__SMACK_value(length));
-  public_in(__SMACK_value(val));
-  struct s2n_blob blob =  {.size = length, .data=data};
-  data[length] = val;
-  decrypt_cbc(0, 0, &blob, &blob);
-  blob.data[length] = val;
-  test_leakage_impl(&blob);
-  
+   return s2n_record_parse_test(&conn, header, payload_length, packet_size, padding_length, bytes_remaining);
 }
