@@ -109,8 +109,7 @@ int s2n_record_read_update_hmac_header(struct s2n_connection *conn,
 				  uint8_t *header,
 				  struct s2n_hmac_state *mac,
 				  uint16_t payload_length,
-				  uint8_t *sequence_number
-				  )
+				  uint8_t *sequence_number)
 {
     header[3] = (payload_length >> 8);
     header[4] = payload_length & 0xff;
@@ -126,20 +125,19 @@ int s2n_record_read_update_hmac_header(struct s2n_connection *conn,
     return 0;
 }
 
-int s2n_record_decrypt_and_verify_aead(struct s2n_connection *conn,
+int s2n_record_decrypt_and_verify_aead(struct s2n_blob *aad,
 				       const struct s2n_cipher_suite *cipher_suite,
-				       uint8_t *header,
-				       struct s2n_hmac_state *mac,
-				       uint8_t *sequence_number,
+				       struct s2n_connection *conn,
 				       struct s2n_blob* en,
-				       uint16_t payload_length,
-				       struct s2n_session_key *session_key,
-				       uint8_t mac_digest_size,
-				       struct s2n_blob *iv,
+				       uint8_t *header,
 				       uint8_t *implicit_iv,
+				       struct s2n_blob *iv,
 				       uint8_t *ivpad,
-				       struct s2n_blob *aad
-				      )
+				       struct s2n_hmac_state *mac,
+				       uint8_t mac_digest_size,
+				       uint16_t payload_length,
+				       uint8_t *sequence_number,
+				       struct s2n_session_key *session_key)
 {
     /* Skip explicit IV for decryption */
     en->size -= cipher_suite->record_alg->cipher->io.aead.record_iv_size;
@@ -166,26 +164,24 @@ int s2n_record_decrypt_and_verify_aead(struct s2n_connection *conn,
     
     /* Truncate and wipe the MAC and any padding */
     GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
-    conn->in_status = PLAINTEXT;
 
     return 0;
 }
 
 
-int s2n_record_decrypt_and_verify_cbc(struct s2n_connection *conn,
+int s2n_record_decrypt_and_verify_cbc(struct s2n_blob *aad,
 				      const struct s2n_cipher_suite *cipher_suite,
-				      uint8_t *header,
-				      struct s2n_hmac_state *mac,
-				      uint8_t *sequence_number,
+				      struct s2n_connection *conn,
 				      struct s2n_blob* en,
-				      uint16_t payload_length,
-				      struct s2n_session_key *session_key,
-				      uint8_t mac_digest_size,
-				      struct s2n_blob *iv,
+				      uint8_t *header,
 				      uint8_t *implicit_iv,
+				      struct s2n_blob *iv,
 				      uint8_t *ivpad,
-				      struct s2n_blob *aad
-				      )
+				      struct s2n_hmac_state *mac,
+				      uint8_t mac_digest_size,
+				      uint16_t payload_length,
+				      uint8_t *sequence_number,
+				      struct s2n_session_key *session_key)
 {
     /* Check that we have some data to decrypt */
     ne_check(en->size, 0);
@@ -230,24 +226,23 @@ int s2n_record_decrypt_and_verify_cbc(struct s2n_connection *conn,
     
     /* Truncate and wipe the MAC and any padding */
     GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
-    conn->in_status = PLAINTEXT;
+
     return 0;
 }
 
-int s2n_record_decrypt_and_verify_composite(struct s2n_connection *conn,
+int s2n_record_decrypt_and_verify_composite(struct s2n_blob *aad,
 					    const struct s2n_cipher_suite *cipher_suite,
-					    uint8_t *header,
-					    struct s2n_hmac_state *mac,
-					    uint8_t *sequence_number,
+					    struct s2n_connection *conn,
 					    struct s2n_blob* en,
-					    uint16_t payload_length,
-					    struct s2n_session_key *session_key,
-					    uint8_t mac_digest_size,
-					    struct s2n_blob *iv,
+					    uint8_t *header,
 					    uint8_t *implicit_iv,
+					    struct s2n_blob *iv,
 					    uint8_t *ivpad,
-					    struct s2n_blob *aad
-					    )
+					    struct s2n_hmac_state *mac,
+					    uint8_t mac_digest_size,
+					    uint16_t payload_length,
+					    uint8_t *sequence_number,
+					    struct s2n_session_key *session_key)
 {
     ne_check(en->size, 0);
     eq_check(en->size % iv->size,  0);
@@ -280,26 +275,24 @@ int s2n_record_decrypt_and_verify_composite(struct s2n_connection *conn,
 
     /* Truncate and wipe the MAC and any padding */
     GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
-    conn->in_status = PLAINTEXT;
 
     return 0;
 }
 
 
-int s2n_record_decrypt_and_verify_stream(struct s2n_connection *conn,
+int s2n_record_decrypt_and_verify_stream(struct s2n_blob *aad,
 					 const struct s2n_cipher_suite *cipher_suite,
-					 uint8_t *header,
-					 struct s2n_hmac_state *mac,
-					 uint8_t *sequence_number,
+					 struct s2n_connection *conn,
 					 struct s2n_blob* en,
-					 uint16_t payload_length,
-					 struct s2n_session_key *session_key,
-					 uint8_t mac_digest_size,
-					 struct s2n_blob *iv,
+					 uint8_t *header,
 					 uint8_t *implicit_iv,
+					 struct s2n_blob *iv,
 					 uint8_t *ivpad,
-					 struct s2n_blob *aad
-					 )
+					 struct s2n_hmac_state *mac,
+					 uint8_t mac_digest_size,
+					 uint16_t payload_length,
+					 uint8_t *sequence_number,
+					 struct s2n_session_key *session_key)
 {
     /* Decrypt stuff! */
     GUARD(cipher_suite->record_alg->cipher->io.stream.decrypt(session_key, en, en));
@@ -328,7 +321,6 @@ int s2n_record_decrypt_and_verify_stream(struct s2n_connection *conn,
 
     /* Truncate and wipe the MAC and any padding */
     GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
-    conn->in_status = PLAINTEXT;
     
     return 0;
 }
@@ -455,27 +447,31 @@ int s2n_record_parse(struct s2n_connection *conn)
 
     /* Decrypt stuff! */
     switch (cipher_suite->record_alg->cipher->type) {
-    case S2N_STREAM:
-      GUARD(s2n_record_decrypt_and_verify_stream(conn, cipher_suite, header, mac, sequence_number, &en,
-						 payload_length, session_key,mac_digest_size,&iv, implicit_iv, ivpad, &aad));
+    case S2N_AEAD:
+      GUARD(s2n_record_decrypt_and_verify_aead
+	    (&aad, cipher_suite, conn, &en, header, implicit_iv, &iv, ivpad, mac, mac_digest_size,
+	     payload_length, sequence_number, session_key));
       break;
     case S2N_CBC:
-      GUARD(s2n_record_decrypt_and_verify_cbc(conn, cipher_suite, header, mac, sequence_number, &en,
-						 payload_length, session_key,mac_digest_size,&iv, implicit_iv, ivpad, &aad));
-      break;
-    case S2N_AEAD:
-      GUARD(s2n_record_decrypt_and_verify_aead(conn, cipher_suite, header, mac, sequence_number, &en,
-						 payload_length, session_key,mac_digest_size,&iv, implicit_iv, ivpad, &aad));
+      GUARD(s2n_record_decrypt_and_verify_cbc
+	    (&aad, cipher_suite, conn, &en, header, implicit_iv, &iv, ivpad, mac, mac_digest_size,
+	     payload_length, sequence_number, session_key));
       break;
     case S2N_COMPOSITE:
-      GUARD(s2n_record_decrypt_and_verify_composite(conn, cipher_suite, header, mac, sequence_number, &en,
-						 payload_length, session_key,mac_digest_size,&iv, implicit_iv, ivpad, &aad));
+      GUARD(s2n_record_decrypt_and_verify_composite
+	    (&aad, cipher_suite, conn, &en, header, implicit_iv, &iv, ivpad, mac, mac_digest_size,
+	     payload_length, sequence_number, session_key));
+      break;
+    case S2N_STREAM:
+      GUARD(s2n_record_decrypt_and_verify_stream
+	    (&aad, cipher_suite, conn, &en, header, implicit_iv, &iv, ivpad, mac, mac_digest_size,
+	     payload_length, sequence_number, session_key));
       break;
     default:
       S2N_ERROR(S2N_ERR_CIPHER_TYPE);
       break;
     }
 
-
+    conn->in_status = PLAINTEXT;
     return 0;
 }
