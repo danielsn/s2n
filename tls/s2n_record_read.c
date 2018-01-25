@@ -98,6 +98,241 @@ int s2n_record_header_parse(struct s2n_connection *conn, uint8_t * content_type,
     return 0;
 }
 
+int s2n_record_read_increment_sequence_number(uint8_t *sequence_number)
+{
+    struct s2n_blob seq = {.data = sequence_number,.size = S2N_TLS_SEQUENCE_NUM_LEN };
+    GUARD(s2n_increment_sequence_number(&seq));
+    return 0;
+}
+
+int s2n_record_read_update_hmac_header(struct s2n_connection *conn,
+				  uint8_t *header,
+				  struct s2n_hmac_state *mac,
+				  uint16_t payload_length,
+				  uint8_t *sequence_number
+				  )
+{
+    header[3] = (payload_length >> 8);
+    header[4] = payload_length & 0xff;
+    GUARD(s2n_hmac_reset(mac));
+    GUARD(s2n_hmac_update(mac, sequence_number, S2N_TLS_SEQUENCE_NUM_LEN));
+  
+    if (conn->actual_protocol_version == S2N_SSLv3) {
+      GUARD(s2n_hmac_update(mac, header, 1));
+      GUARD(s2n_hmac_update(mac, header + 3, 2));
+    } else {
+      GUARD(s2n_hmac_update(mac, header, S2N_TLS_RECORD_HEADER_LENGTH));
+    }
+    return 0;
+}
+
+int s2n_record_decrypt_and_verify_aead(struct s2n_connection *conn,
+				       const struct s2n_cipher_suite *cipher_suite,
+				       uint8_t *header,
+				       struct s2n_hmac_state *mac,
+				       uint8_t *sequence_number,
+				       struct s2n_blob* en,
+				       uint16_t payload_length,
+				       struct s2n_session_key *session_key,
+				       uint8_t mac_digest_size,
+				       struct s2n_blob *iv,
+				       uint8_t *implicit_iv,
+				       uint8_t *ivpad,
+				       struct s2n_blob *aad
+				      )
+{
+    /* Skip explicit IV for decryption */
+    en->size -= cipher_suite->record_alg->cipher->io.aead.record_iv_size;
+    en->data += cipher_suite->record_alg->cipher->io.aead.record_iv_size;
+
+    /* Check that we have some data to decrypt */
+    ne_check(en->size, 0);
+
+    GUARD(cipher_suite->record_alg->cipher->io.aead.decrypt(session_key, iv, aad, en, en));
+
+    GUARD(s2n_record_read_update_hmac_header(conn, header, mac, payload_length, sequence_number));
+    GUARD(s2n_record_read_increment_sequence_number(sequence_number));
+
+    /* O.k., we've successfully read and decrypted the record, now we need to align the stuffer
+     * for reading the plaintext data.
+     */
+    GUARD(s2n_stuffer_reread(&conn->in));
+    GUARD(s2n_stuffer_reread(&conn->header_in));
+
+    /* Skip the IV, if any */
+    if (conn->actual_protocol_version >= S2N_TLS12) {
+        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.aead.record_iv_size));
+    }
+    
+    /* Truncate and wipe the MAC and any padding */
+    GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
+    conn->in_status = PLAINTEXT;
+
+    return 0;
+}
+
+
+int s2n_record_decrypt_and_verify_cbc(struct s2n_connection *conn,
+				      const struct s2n_cipher_suite *cipher_suite,
+				      uint8_t *header,
+				      struct s2n_hmac_state *mac,
+				      uint8_t *sequence_number,
+				      struct s2n_blob* en,
+				      uint16_t payload_length,
+				      struct s2n_session_key *session_key,
+				      uint8_t mac_digest_size,
+				      struct s2n_blob *iv,
+				      uint8_t *implicit_iv,
+				      uint8_t *ivpad,
+				      struct s2n_blob *aad
+				      )
+{
+    /* Check that we have some data to decrypt */
+    ne_check(en->size, 0);
+
+    /* ... and that we have a multiple of the block size */
+    eq_check(en->size % iv->size, 0);
+
+    /* Copy the last encrypted block to be the next IV */
+    if (conn->actual_protocol_version < S2N_TLS11) {
+      memcpy_check(ivpad, en->data + en->size - iv->size, iv->size);
+    }
+
+    GUARD(cipher_suite->record_alg->cipher->io.cbc.decrypt(session_key, iv, en, en));
+    
+    if (conn->actual_protocol_version < S2N_TLS11) {
+      memcpy_check(implicit_iv, ivpad, iv->size);
+    }
+
+    /* Subtract the padding length */
+    gt_check(en->size, 0);
+    payload_length -= (en->data[en->size - 1] + 1);
+
+    GUARD(s2n_record_read_update_hmac_header(conn, header, mac, payload_length, sequence_number));
+    GUARD(s2n_record_read_increment_sequence_number(sequence_number));
+
+    /* Padding */
+    if (s2n_verify_cbc(conn, mac, en) < 0) {
+      GUARD(s2n_stuffer_wipe(&conn->in));
+      S2N_ERROR(S2N_ERR_BAD_MESSAGE);
+    }
+
+    /* O.k., we've successfully read and decrypted the record, now we need to align the stuffer
+     * for reading the plaintext data.
+     */
+    GUARD(s2n_stuffer_reread(&conn->in));
+    GUARD(s2n_stuffer_reread(&conn->header_in));
+
+    /* Skip the IV, if any */
+    if (conn->actual_protocol_version > S2N_TLS10) {
+        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.cbc.record_iv_size));
+    }
+    
+    /* Truncate and wipe the MAC and any padding */
+    GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
+    conn->in_status = PLAINTEXT;
+    return 0;
+}
+
+int s2n_record_decrypt_and_verify_composite(struct s2n_connection *conn,
+					    const struct s2n_cipher_suite *cipher_suite,
+					    uint8_t *header,
+					    struct s2n_hmac_state *mac,
+					    uint8_t *sequence_number,
+					    struct s2n_blob* en,
+					    uint16_t payload_length,
+					    struct s2n_session_key *session_key,
+					    uint8_t mac_digest_size,
+					    struct s2n_blob *iv,
+					    uint8_t *implicit_iv,
+					    uint8_t *ivpad,
+					    struct s2n_blob *aad
+					    )
+{
+    ne_check(en->size, 0);
+    eq_check(en->size % iv->size,  0);
+
+    /* Copy the last encrypted block to be the next IV */
+    memcpy_check(ivpad, en->data + en->size - iv->size, iv->size);
+
+    /* This will: Skip the explicit IV(if applicable), decrypt the payload, verify the MAC and padding. */
+    GUARD((cipher_suite->record_alg->cipher->io.comp.decrypt(session_key, iv, en, en)));
+    
+    memcpy_check(implicit_iv, ivpad, iv->size);
+
+    /* Subtract the padding length */
+    gt_check(en->size, 0);
+    payload_length -= (en->data[en->size - 1] + 1);
+
+    GUARD(s2n_record_read_update_hmac_header(conn, header, mac, payload_length, sequence_number));
+    GUARD(s2n_record_read_increment_sequence_number(sequence_number));
+
+    /* O.k., we've successfully read and decrypted the record, now we need to align the stuffer
+     * for reading the plaintext data.
+     */
+    GUARD(s2n_stuffer_reread(&conn->in));
+    GUARD(s2n_stuffer_reread(&conn->header_in));
+
+    /* Skip the IV, if any */
+    if (conn->actual_protocol_version > S2N_TLS10) {
+        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.comp.record_iv_size));
+    }
+
+    /* Truncate and wipe the MAC and any padding */
+    GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
+    conn->in_status = PLAINTEXT;
+
+    return 0;
+}
+
+
+int s2n_record_decrypt_and_verify_stream(struct s2n_connection *conn,
+					 const struct s2n_cipher_suite *cipher_suite,
+					 uint8_t *header,
+					 struct s2n_hmac_state *mac,
+					 uint8_t *sequence_number,
+					 struct s2n_blob* en,
+					 uint16_t payload_length,
+					 struct s2n_session_key *session_key,
+					 uint8_t mac_digest_size,
+					 struct s2n_blob *iv,
+					 uint8_t *implicit_iv,
+					 uint8_t *ivpad,
+					 struct s2n_blob *aad
+					 )
+{
+    /* Decrypt stuff! */
+    GUARD(cipher_suite->record_alg->cipher->io.stream.decrypt(session_key, en, en));
+
+    /* Update the MAC */
+    GUARD(s2n_record_read_update_hmac_header(conn, header, mac, payload_length, sequence_number));
+    GUARD(s2n_record_read_increment_sequence_number(sequence_number));
+
+    /* MAC check for streaming ciphers - no padding */
+    GUARD(s2n_hmac_update(mac, en->data, payload_length));
+
+    uint8_t check_digest[S2N_MAX_DIGEST_LEN];
+    lte_check(mac_digest_size, sizeof(check_digest));
+    GUARD(s2n_hmac_digest(mac, check_digest, mac_digest_size));
+
+    if (s2n_hmac_digest_verify(en->data + payload_length, check_digest, mac_digest_size) < 0) {
+      GUARD(s2n_stuffer_wipe(&conn->in));
+      S2N_ERROR(S2N_ERR_BAD_MESSAGE);
+    }
+
+    /* O.k., we've successfully read and decrypted the record, now we need to align the stuffer
+     * for reading the plaintext data.
+     */
+    GUARD(s2n_stuffer_reread(&conn->in));
+    GUARD(s2n_stuffer_reread(&conn->header_in));
+
+    /* Truncate and wipe the MAC and any padding */
+    GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
+    conn->in_status = PLAINTEXT;
+    
+    return 0;
+}
+
 int s2n_record_parse(struct s2n_connection *conn)
 {
     struct s2n_blob iv;
@@ -220,114 +455,27 @@ int s2n_record_parse(struct s2n_connection *conn)
 
     /* Decrypt stuff! */
     switch (cipher_suite->record_alg->cipher->type) {
-        case S2N_STREAM:
-            GUARD(cipher_suite->record_alg->cipher->io.stream.decrypt(session_key, &en, &en));
-            break;
-        case S2N_CBC:
-            /* Check that we have some data to decrypt */
-            ne_check(en.size, 0);
-
-            /* ... and that we have a multiple of the block size */
-            eq_check(en.size % iv.size, 0);
-
-            /* Copy the last encrypted block to be the next IV */
-            if (conn->actual_protocol_version < S2N_TLS11) {
-                memcpy_check(ivpad, en.data + en.size - iv.size, iv.size);
-            }
-
-            GUARD(cipher_suite->record_alg->cipher->io.cbc.decrypt(session_key, &iv, &en, &en));
-
-            if (conn->actual_protocol_version < S2N_TLS11) {
-                memcpy_check(implicit_iv, ivpad, iv.size);
-            }
-            break;
-        case S2N_AEAD:
-            /* Skip explicit IV for decryption */
-            en.size -= cipher_suite->record_alg->cipher->io.aead.record_iv_size;
-            en.data += cipher_suite->record_alg->cipher->io.aead.record_iv_size;
-
-            /* Check that we have some data to decrypt */
-            ne_check(en.size, 0);
-
-            GUARD(cipher_suite->record_alg->cipher->io.aead.decrypt(session_key, &iv, &aad, &en, &en));
-            break;
-        case S2N_COMPOSITE:
-            ne_check(en.size, 0);
-            eq_check(en.size % iv.size,  0);
-
-            /* Copy the last encrypted block to be the next IV */
-            memcpy_check(ivpad, en.data + en.size - iv.size, iv.size);
-
-            /* This will: Skip the explicit IV(if applicable), decrypt the payload, verify the MAC and padding. */
-            GUARD((cipher_suite->record_alg->cipher->io.comp.decrypt(session_key, &iv, &en, &en)));
-
-            memcpy_check(implicit_iv, ivpad, iv.size);
-            break;
-        default:
-            S2N_ERROR(S2N_ERR_CIPHER_TYPE);
-            break;
+    case S2N_STREAM:
+      GUARD(s2n_record_decrypt_and_verify_stream(conn, cipher_suite, header, mac, sequence_number, &en,
+						 payload_length, session_key,mac_digest_size,&iv, implicit_iv, ivpad, &aad));
+      break;
+    case S2N_CBC:
+      GUARD(s2n_record_decrypt_and_verify_cbc(conn, cipher_suite, header, mac, sequence_number, &en,
+						 payload_length, session_key,mac_digest_size,&iv, implicit_iv, ivpad, &aad));
+      break;
+    case S2N_AEAD:
+      GUARD(s2n_record_decrypt_and_verify_aead(conn, cipher_suite, header, mac, sequence_number, &en,
+						 payload_length, session_key,mac_digest_size,&iv, implicit_iv, ivpad, &aad));
+      break;
+    case S2N_COMPOSITE:
+      GUARD(s2n_record_decrypt_and_verify_composite(conn, cipher_suite, header, mac, sequence_number, &en,
+						 payload_length, session_key,mac_digest_size,&iv, implicit_iv, ivpad, &aad));
+      break;
+    default:
+      S2N_ERROR(S2N_ERR_CIPHER_TYPE);
+      break;
     }
 
-    /* Subtract the padding length */
-    if (cipher_suite->record_alg->cipher->type == S2N_CBC || cipher_suite->record_alg->cipher->type == S2N_COMPOSITE) {
-        gt_check(en.size, 0);
-        payload_length -= (en.data[en.size - 1] + 1);
-    }
-
-    /* Update the MAC */
-    header[3] = (payload_length >> 8);
-    header[4] = payload_length & 0xff;
-    GUARD(s2n_hmac_reset(mac));
-    GUARD(s2n_hmac_update(mac, sequence_number, S2N_TLS_SEQUENCE_NUM_LEN));
-
-    if (conn->actual_protocol_version == S2N_SSLv3) {
-        GUARD(s2n_hmac_update(mac, header, 1));
-        GUARD(s2n_hmac_update(mac, header + 3, 2));
-    } else {
-        GUARD(s2n_hmac_update(mac, header, S2N_TLS_RECORD_HEADER_LENGTH));
-    }
-
-    struct s2n_blob seq = {.data = sequence_number,.size = S2N_TLS_SEQUENCE_NUM_LEN };
-    GUARD(s2n_increment_sequence_number(&seq));
-
-    /* Padding */
-    if (cipher_suite->record_alg->cipher->type == S2N_CBC) {
-        if (s2n_verify_cbc(conn, mac, &en) < 0) {
-            GUARD(s2n_stuffer_wipe(&conn->in));
-            S2N_ERROR(S2N_ERR_BAD_MESSAGE);
-        }
-    } else {
-        /* MAC check for streaming ciphers - no padding */
-        GUARD(s2n_hmac_update(mac, en.data, payload_length));
-
-        uint8_t check_digest[S2N_MAX_DIGEST_LEN];
-        lte_check(mac_digest_size, sizeof(check_digest));
-        GUARD(s2n_hmac_digest(mac, check_digest, mac_digest_size));
-
-        if (s2n_hmac_digest_verify(en.data + payload_length, check_digest, mac_digest_size) < 0) {
-            GUARD(s2n_stuffer_wipe(&conn->in));
-            S2N_ERROR(S2N_ERR_BAD_MESSAGE);
-        }
-    }
-
-    /* O.k., we've successfully read and decrypted the record, now we need to align the stuffer
-     * for reading the plaintext data.
-     */
-    GUARD(s2n_stuffer_reread(&conn->in));
-    GUARD(s2n_stuffer_reread(&conn->header_in));
-
-    /* Skip the IV, if any */
-    if (cipher_suite->record_alg->cipher->type == S2N_CBC && conn->actual_protocol_version > S2N_TLS10) {
-        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.cbc.record_iv_size));
-    } else if (cipher_suite->record_alg->cipher->type == S2N_AEAD && conn->actual_protocol_version >= S2N_TLS12) {
-        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.aead.record_iv_size));
-    } else if (cipher_suite->record_alg->cipher->type == S2N_COMPOSITE && conn->actual_protocol_version > S2N_TLS10) {
-        GUARD(s2n_stuffer_skip_read(&conn->in, cipher_suite->record_alg->cipher->io.comp.record_iv_size));
-    }
-
-    /* Truncate and wipe the MAC and any padding */
-    GUARD(s2n_stuffer_wipe_n(&conn->in, s2n_stuffer_data_available(&conn->in) - payload_length));
-    conn->in_status = PLAINTEXT;
 
     return 0;
 }
