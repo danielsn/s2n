@@ -120,13 +120,14 @@ int main(int argc, char **argv)
         struct s2n_cipher_preferences server_cipher_preferences;
         struct s2n_connection *client_conn;
         struct s2n_connection *server_conn;
+        EXPECT_NOT_NULL(server_conn = s2n_connection_new(S2N_SERVER));
         int server_to_client[2];
         int client_to_server[2];
-        struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
+        struct s2n_cipher_suite *expected_cipher = default_cipher_preferences->suites[cipher_idx];
         uint8_t expect_failure = 0;
 
         /* Expect failure if the libcrypto we're building with can't support the cipher */
-        if (!cur_cipher->available) {
+        if (!expected_cipher->available) {
             expect_failure = 1;
         }
 
@@ -135,8 +136,8 @@ int main(int argc, char **argv)
            will never be NULL */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
         server_cipher_preferences.count = 1;
-        server_cipher_preferences.suites = &cur_cipher;
-        server_config->cipher_preferences = &server_cipher_preferences;
+        server_cipher_preferences.suites = &expected_cipher;
+        server_conn->cipher_pref_override = &server_cipher_preferences;
 
         /* Create nonblocking pipes */
         EXPECT_SUCCESS(pipe(server_to_client));
@@ -153,8 +154,6 @@ int main(int argc, char **argv)
         client_conn->server_protocol_version = S2N_TLS12;
         client_conn->client_protocol_version = S2N_TLS12;
         client_conn->actual_protocol_version = S2N_TLS12;
-
-        EXPECT_NOT_NULL(server_conn = s2n_connection_new(S2N_SERVER));
         EXPECT_SUCCESS(s2n_connection_set_read_fd(server_conn, client_to_server[0]));
         EXPECT_SUCCESS(s2n_connection_set_write_fd(server_conn, server_to_client[1]));
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, server_config));
@@ -164,6 +163,9 @@ int main(int argc, char **argv)
 
         if (!expect_failure) {
             EXPECT_SUCCESS(try_handshake(server_conn, client_conn));
+            const char* actual_cipher = s2n_connection_get_cipher(server_conn);
+            EXPECT_TRUE(strcmp(actual_cipher, expected_cipher->name) == 0);
+
         } else {
             EXPECT_FAILURE(try_handshake(server_conn, client_conn));
         }
