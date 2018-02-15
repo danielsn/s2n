@@ -51,7 +51,10 @@ sudo update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llv
 sudo update-alternatives --install /usr/bin/llvm-link llvm-link /usr/bin/llvm-link-${LLVM_SHORT_VERSION} 30
 sudo update-alternatives --install /usr/bin/llvm-dis llvm-dis /usr/bin/llvm-dis-${LLVM_SHORT_VERSION} 30
 
+#the wrong clang is getting loaded, so put /usr/bin at that top of the path
+export PATH="/usr/bin:${PATH}"
 
+which clang
 clang --version
 clang-3.9 --version
 
