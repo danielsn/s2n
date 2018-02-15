@@ -23,6 +23,8 @@ usage() {
 
 runSingleTest() {
     cd "${BASE_S2N_DIR}/tests/sidewinder/working/${1}"
+    which clang
+    clang --version
     ./copy_as_needed.sh
     make clean
 
