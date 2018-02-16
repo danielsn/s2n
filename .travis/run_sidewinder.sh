@@ -64,7 +64,7 @@ which llvm2bpl || echo "can't find llvm2bpl"
 which clang
 clang --version
 #travis was putting the wrong clang on the path. Override it
-export PATH="\usr\bin:${PATH}"
+export PATH="/usr/bin:${PATH}"
 which clang
 clang --version
 
