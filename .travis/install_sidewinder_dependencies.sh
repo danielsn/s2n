@@ -61,8 +61,9 @@ ln -s /usr/bin/clang++        ~/override_clang/clang++
 ln -s /usr/bin//llvm-config   ~/override_clang/llvm-config
 ln -s /usr/bin/llvm-link      ~/override_clang/llvm-link
 ln -s /usr/bin/llvm-dis       ~/override_clang/llvm-dis
+chmod +x ~/override_clang/*
 
-export PATH="~/override_clang/:${PATH}"
+export PATH="$HOME/override_clang/:${PATH}"
 which clang
 clang --version
 clang-3.9 --version

@@ -65,7 +65,7 @@ which clang
 clang --version
 
 #travis was putting the wrong clang on the path. Override it
-export PATH="~/override_clang/:${PATH}"
+export PATH="$HOME/override_clang/:${PATH}"
 which clang
 clang --version
 
