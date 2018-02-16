@@ -44,7 +44,7 @@ int balanced(int pub, int key)
 
 }
 
-int test_fail(int pub, int key)
+int test(int pub, int key)
 {
   public_in(__SMACK_value(pub));
 

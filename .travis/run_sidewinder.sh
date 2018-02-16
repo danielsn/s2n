@@ -29,9 +29,9 @@ runSingleTest() {
     make clean
 
     #run the test.  We expect both to pass, and none to fail
-    FAILED=0
-    EXPECTED_PASS=1
-    EXPECTED_FAIL=0
+    local FAILED=0
+    local EXPECTED_PASS=$2
+    local EXPECTED_FAIL=$3
     make 2>&1 | ../../count_success.pl $EXPECTED_PASS $EXPECTED_FAIL || FAILED=1
 
     if [ $FAILED == 1 ];
@@ -69,7 +69,6 @@ export PATH="$HOME/override_clang/:${PATH}"
 which clang
 clang --version
 
-
-runSingleTest "s2n-canary-pass"
-runSingleTest "s2n-canary-fail"
-runSingleTest "s2n-cbc"
+runSingleTest "s2n-canary-fail" 0 1
+runSingleTest "s2n-canary-pass" 1 0
+runSingleTest "s2n-cbc" 1 0 
