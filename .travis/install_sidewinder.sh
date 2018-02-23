@@ -30,7 +30,7 @@ INSTALL_DIR=$1
 cd "$INSTALL_DIR"
 
 #install smack
-git clone https://github.com/danielsn/smack.git -b sidewinder-debug
+git clone https://github.com/danielsn/smack.git -b boost_z3_460
 cd smack/bin
 
 clang --version
