@@ -200,14 +200,15 @@ begin
   end
 
   if params[:verify]
-    flags = []
-    flags << "/printModel 4" if params[:printModel]
-    flags << "/doModSetAnalysis"
-    flags << "/loopUnroll:#{params[:unroll]}" if params[:unroll]
-    flags << "/timeLimit:#{params[:time]}" if params[:time]
-    warn "warning: only unrolling up to #{params[:unroll]}" if params[:unroll]
-    run_command_with_heartbeat(30, "#{echo} boogie #{flags * " "} #{params[:b]}")
-    #raise "failed to process product program" unless $?.success?
+    run_command("cat #{params[:b]}") 
+    # flags = []
+    # flags << "/printModel 4" if params[:printModel]
+    # flags << "/doModSetAnalysis"
+    # flags << "/loopUnroll:#{params[:unroll]}" if params[:unroll]
+    # flags << "/timeLimit:#{params[:time]}" if params[:time]
+    # warn "warning: only unrolling up to #{params[:unroll]}" if params[:unroll]
+    # run_command_with_heartbeat(30, "#{echo} boogie #{flags * " "} #{params[:b]}")
+    # #raise "failed to process product program" unless $?.success?
   end
 
 rescue Interrupt

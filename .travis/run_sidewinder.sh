@@ -69,6 +69,6 @@ export PATH="$HOME/override_clang/:${PATH}"
 which clang
 clang --version
 
-runSingleTest "s2n-canary-fail" 0 1
-runSingleTest "s2n-canary-pass" 1 0
+#runSingleTest "s2n-canary-fail" 0 1
+#runSingleTest "s2n-canary-pass" 1 0
 runSingleTest "s2n-cbc" 1 0 
