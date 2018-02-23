@@ -38,7 +38,7 @@ which clang
 
 ./build.sh
 
-z3 --version
+#z3 --version
 
 
 # Disabling ShellCheck using https://github.com/koalaman/shellcheck/wiki/Directive
