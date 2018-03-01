@@ -17,12 +17,12 @@
 
 #include "testlib/s2n_testlib.h"
 
+#include <fcntl.h>
+#include <signal.h>
+#include <stdint.h>
 #include <sys/poll.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <signal.h>
-#include <stdint.h>
-#include <fcntl.h>
 
 #include <s2n.h>
 
@@ -37,20 +37,20 @@ int buffer_read(void *io_context, uint8_t *buf, uint32_t len)
 {
     struct s2n_stuffer *in_buf;
     int n_read, n_avail;
-    
+
     if (buf == NULL) {
         return 0;
     }
 
-    in_buf = (struct s2n_stuffer *) io_context;
+    in_buf = (struct s2n_stuffer *)io_context;
     if (in_buf == NULL) {
         errno = EINVAL;
         return -1;
     }
-   
+
     // read the number of bytes requested or less if it isn't available
     n_avail = s2n_stuffer_data_available(in_buf);
-    n_read = (len < n_avail) ? len : n_avail;
+    n_read  = (len < n_avail) ? len : n_avail;
 
     if (n_read == 0) {
         errno = EAGAIN;
@@ -68,8 +68,8 @@ int buffer_write(void *io_context, const uint8_t *buf, uint32_t len)
     if (buf == NULL) {
         return 0;
     }
-    
-    out = (struct s2n_stuffer *) io_context;
+
+    out = (struct s2n_stuffer *)io_context;
     if (out == NULL) {
         errno = EINVAL;
         return -1;
@@ -90,7 +90,7 @@ int mock_client(int writefd, int readfd)
     s2n_blocked_status blocked;
     int result = 0;
 
-    conn = s2n_connection_new(S2N_CLIENT);
+    conn          = s2n_connection_new(S2N_CLIENT);
     client_config = s2n_config_new();
     s2n_config_disable_x509_verification(client_config);
     s2n_connection_set_config(conn, client_config);
@@ -189,7 +189,7 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_connection_set_send_cb(conn, &buffer_write));
     EXPECT_SUCCESS(s2n_connection_set_recv_ctx(conn, &in));
     EXPECT_SUCCESS(s2n_connection_set_send_ctx(conn, &out));
-    
+
     /* Make our pipes non-blocking */
     EXPECT_NOT_EQUAL(fcntl(client_to_server[0], F_SETFL, fcntl(client_to_server[0], F_GETFL) | O_NONBLOCK), -1);
     EXPECT_NOT_EQUAL(fcntl(server_to_client[1], F_SETFL, fcntl(server_to_client[1], F_GETFL) | O_NONBLOCK), -1);
@@ -200,28 +200,28 @@ int main(int argc, char **argv)
 
         ret = s2n_negotiate(conn, &blocked);
         EXPECT_TRUE(ret == 0 || (blocked && (errno == EAGAIN || errno == EWOULDBLOCK)));
-        
+
         // check to see if we need to copy more over from the pipes to the buffers
         // to continue the handshake
         s2n_stuffer_recv_from_fd(&in, client_to_server[0], MAX_BUF_SIZE);
         s2n_stuffer_send_to_fd(&out, server_to_client[1], s2n_stuffer_data_available(&out));
     } while (blocked);
-   
+
     /* Shutdown after negotiating */
-    uint8_t server_shutdown=0;
+    uint8_t server_shutdown = 0;
     do {
         int ret;
-        
+
         ret = s2n_shutdown(conn, &blocked);
         EXPECT_TRUE(ret == 0 || (blocked && (errno == EAGAIN || errno == EWOULDBLOCK)));
         if (ret == 0) {
             server_shutdown = 1;
         }
-        
+
         s2n_stuffer_recv_from_fd(&in, client_to_server[0], MAX_BUF_SIZE);
         s2n_stuffer_send_to_fd(&out, server_to_client[1], s2n_stuffer_data_available(&out));
     } while (!server_shutdown);
-    
+
     EXPECT_SUCCESS(s2n_connection_free(conn));
 
     /* Clean up */
@@ -240,4 +240,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

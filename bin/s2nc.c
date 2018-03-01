@@ -13,20 +13,20 @@
  * permissions and limitations under the License.
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <poll.h>
 #include <netdb.h>
+#include <poll.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
-#include <stdlib.h>
-#include <signal.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
-#include <getopt.h>
-#include <strings.h>
 #include <errno.h>
+#include <getopt.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
+#include <unistd.h>
 
 #include <s2n.h>
 
@@ -66,7 +66,8 @@ struct verify_data {
     const char *trusted_host;
 };
 
-static uint8_t unsafe_verify_host(const char *host_name, size_t host_name_len, void *data) {
+static uint8_t unsafe_verify_host(const char *host_name, size_t host_name_len, void *data)
+{
     struct verify_data *verify_data = (struct verify_data *)data;
 
     char *offset = strstr(host_name, "*.");
@@ -87,34 +88,34 @@ int main(int argc, char *const *argv)
     struct addrinfo hints, *ai_list, *ai;
     int r, sockfd = 0;
     /* Optional args */
-    const char *alpn_protocols = NULL;
-    const char *server_name = NULL;
-    const char *ca_file = NULL;
-    const char *ca_dir = NULL;
-    uint16_t mfl_value = 0;
-    uint8_t mfl_code = 0;
-    uint8_t insecure = 0;
+    const char *alpn_protocols   = NULL;
+    const char *server_name      = NULL;
+    const char *ca_file          = NULL;
+    const char *ca_dir           = NULL;
+    uint16_t mfl_value           = 0;
+    uint8_t mfl_code             = 0;
+    uint8_t insecure             = 0;
     s2n_status_request_type type = S2N_STATUS_REQUEST_NONE;
     /* required args */
     const char *host = NULL;
     struct verify_data unsafe_verify_data;
     const char *port = "443";
-    int echo_input = 0;
+    int echo_input   = 0;
 
     static struct option long_options[] = {
-        {"alpn", required_argument, 0, 'a'},
-        {"echo", required_argument, 0, 'e'},
-        {"help", no_argument, 0, 'h'},
-        {"name", required_argument, 0, 'n'},
-        {"status", no_argument, 0, 's'},
-        {"mfl", required_argument, 0, 'm'},
-        {"ca-file", required_argument, 0, 'f'},
-        {"ca-dir", required_argument, 0, 'd'},
-        {"insecure", no_argument, 0, 'i'}
+        { "alpn", required_argument, 0, 'a' },
+        { "echo", required_argument, 0, 'e' },
+        { "help", no_argument, 0, 'h' },
+        { "name", required_argument, 0, 'n' },
+        { "status", no_argument, 0, 's' },
+        { "mfl", required_argument, 0, 'm' },
+        { "ca-file", required_argument, 0, 'f' },
+        { "ca-dir", required_argument, 0, 'd' },
+        { "insecure", no_argument, 0, 'i' }
     };
     while (1) {
         int option_index = 0;
-        int c = getopt_long(argc, argv, "ea:hn:sf:d:i", long_options, &option_index);
+        int c            = getopt_long(argc, argv, "ea:hn:sf:d:i", long_options, &option_index);
         if (c == -1) {
             break;
         }
@@ -135,7 +136,7 @@ int main(int argc, char *const *argv)
             type = S2N_STATUS_REQUEST_OCSP;
             break;
         case 'm':
-            mfl_value = (uint16_t) atoi(optarg);
+            mfl_value = (uint16_t)atoi(optarg);
             break;
         case 'f':
             ca_file = optarg;
@@ -170,7 +171,7 @@ int main(int argc, char *const *argv)
 
     memset(&hints, 0, sizeof(hints));
 
-    hints.ai_family = AF_UNSPEC;
+    hints.ai_family   = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
     if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
@@ -229,7 +230,7 @@ int main(int argc, char *const *argv)
     }
 
     if (type == S2N_STATUS_REQUEST_OCSP) {
-        if(s2n_config_set_check_stapled_ocsp_response(config, 1)) {
+        if (s2n_config_set_check_stapled_ocsp_response(config, 1)) {
             print_s2n_error("OCSP validation is not supported by the linked libCrypto implementation. It cannot be set.");
         }
     }
@@ -240,15 +241,14 @@ int main(int argc, char *const *argv)
         if (s2n_config_set_verification_ca_location(config, ca_file, ca_dir) < 0) {
             print_s2n_error("Error setting CA file for trust store.");
         }
-    }
-    else if (insecure) {
+    } else if (insecure) {
         s2n_config_disable_x509_verification(config);
     }
 
     if (alpn_protocols) {
         /* Count the number of commas, this tells us how many protocols there
            are in the list */
-        const char *ptr = alpn_protocols;
+        const char *ptr    = alpn_protocols;
         int protocol_count = 1;
         while (*ptr) {
             if (*ptr == ',') {
@@ -264,9 +264,9 @@ int main(int argc, char *const *argv)
         }
 
         const char *next = alpn_protocols;
-        int idx = 0;
-        int length = 0;
-        ptr = alpn_protocols;
+        int idx          = 0;
+        int length       = 0;
+        ptr              = alpn_protocols;
         while (*ptr) {
             if (*ptr == ',') {
                 protocols[idx] = malloc(length + 1);
@@ -276,7 +276,7 @@ int main(int argc, char *const *argv)
                 }
                 memcpy(protocols[idx], next, length);
                 protocols[idx][length] = '\0';
-                length = 0;
+                length                 = 0;
                 idx++;
                 ptr++;
                 next = ptr;
@@ -308,22 +308,22 @@ int main(int argc, char *const *argv)
     struct s2n_connection *conn = s2n_connection_new(S2N_CLIENT);
 
     if (mfl_value > 0) {
-        switch(mfl_value) {
-            case 512:
-                mfl_code = S2N_TLS_MAX_FRAG_LEN_512;
-                break;
-            case 1024:
-                mfl_code = S2N_TLS_MAX_FRAG_LEN_1024;
-                break;
-            case 2048:
-                mfl_code = S2N_TLS_MAX_FRAG_LEN_2048;
-                break;
-            case 4096:
-                mfl_code = S2N_TLS_MAX_FRAG_LEN_4096;
-                break;
-            default:
-                fprintf(stderr, "Invalid maximum fragment length value\n");
-                exit(1);
+        switch (mfl_value) {
+        case 512:
+            mfl_code = S2N_TLS_MAX_FRAG_LEN_512;
+            break;
+        case 1024:
+            mfl_code = S2N_TLS_MAX_FRAG_LEN_1024;
+            break;
+        case 2048:
+            mfl_code = S2N_TLS_MAX_FRAG_LEN_2048;
+            break;
+        case 4096:
+            mfl_code = S2N_TLS_MAX_FRAG_LEN_4096;
+            break;
+        default:
+            fprintf(stderr, "Invalid maximum fragment length value\n");
+            exit(1);
         }
     }
 

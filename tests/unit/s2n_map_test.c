@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 
     /* Try a lookup on an empty map. Expect an error because the map is still mutable. */
     EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", 1234));
-    key.data = (void *) keystr;
+    key.data = (void *)keystr;
     key.size = strlen(keystr) + 1;
     EXPECT_FAILURE(s2n_map_lookup(empty, &key, &val));
 
@@ -54,9 +54,9 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", i));
         EXPECT_SUCCESS(snprintf(valstr, sizeof(valstr), "%05d", i));
 
-        key.data = (void *) keystr;
+        key.data = (void *)keystr;
         key.size = strlen(keystr) + 1;
-        val.data = (void *) valstr;
+        val.data = (void *)valstr;
         val.size = strlen(valstr) + 1;
 
         EXPECT_SUCCESS(s2n_map_add(map, &key, &val));
@@ -67,9 +67,9 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", i));
         EXPECT_SUCCESS(snprintf(valstr, sizeof(valstr), "%05d", i));
 
-        key.data = (void *) keystr;
+        key.data = (void *)keystr;
         key.size = strlen(keystr) + 1;
-        val.data = (void *) valstr;
+        val.data = (void *)valstr;
         val.size = strlen(valstr) + 1;
 
         EXPECT_FAILURE(s2n_map_add(map, &key, &val));
@@ -78,16 +78,16 @@ int main(int argc, char **argv)
     /* Try replacing some entries */
     for (int i = 0; i < 10; i++) {
         EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", i));
-        EXPECT_SUCCESS(snprintf(valstr, sizeof(valstr), "%05d", i+1));
+        EXPECT_SUCCESS(snprintf(valstr, sizeof(valstr), "%05d", i + 1));
 
-        key.data = (void *) keystr;
+        key.data = (void *)keystr;
         key.size = strlen(keystr) + 1;
-        val.data = (void *) valstr;
+        val.data = (void *)valstr;
         val.size = strlen(valstr) + 1;
 
         EXPECT_SUCCESS(s2n_map_put(map, &key, &val));
     }
-    
+
     /* Try a lookup before the map is complete: should fail */
     EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", 1));
     EXPECT_FAILURE(s2n_map_lookup(map, &key, &val));
@@ -99,9 +99,9 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", 8193));
     EXPECT_SUCCESS(snprintf(valstr, sizeof(valstr), "%05d", 8193));
 
-    key.data = (void *) keystr;
+    key.data = (void *)keystr;
     key.size = strlen(keystr) + 1;
-    val.data = (void *) valstr;
+    val.data = (void *)valstr;
     val.size = strlen(valstr) + 1;
 
     EXPECT_FAILURE(s2n_map_add(map, &key, &val));
@@ -112,14 +112,13 @@ int main(int argc, char **argv)
         if (i >= 10) {
             EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", i));
             EXPECT_SUCCESS(snprintf(valstr, sizeof(valstr), "%05d", i));
-        }
-        else {
+        } else {
             // The first 10 entries were overwritten with i+1
             EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", i));
-            EXPECT_SUCCESS(snprintf(valstr, sizeof(valstr), "%05d", i+1));
+            EXPECT_SUCCESS(snprintf(valstr, sizeof(valstr), "%05d", i + 1));
         }
 
-        key.data = (void *) keystr;
+        key.data = (void *)keystr;
         key.size = strlen(keystr) + 1;
 
         EXPECT_EQUAL(s2n_map_lookup(map, &key, &val), 1);
@@ -129,7 +128,7 @@ int main(int argc, char **argv)
 
     /* Check for a key that shouldn't be there */
     EXPECT_SUCCESS(snprintf(keystr, sizeof(keystr), "%04x", 8193));
-    key.data = (void *) keystr;
+    key.data = (void *)keystr;
     key.size = strlen(keystr) + 1;
     EXPECT_EQUAL(s2n_map_lookup(map, &key, &val), 0);
 

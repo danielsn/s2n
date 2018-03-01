@@ -17,17 +17,17 @@
 
 #include "error/s2n_errno.h"
 
-#include "tls/s2n_tls_digest_preferences.h"
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_signature_algorithms.h"
+#include "tls/s2n_tls_digest_preferences.h"
 
 #include "stuffer/s2n_stuffer.h"
 
 #include "crypto/s2n_dhe.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_random.h"
+#include "utils/s2n_safety.h"
 
 static int s2n_ecdhe_server_key_recv(struct s2n_connection *conn);
 static int s2n_dhe_server_key_recv(struct s2n_connection *conn);
@@ -173,7 +173,7 @@ static int s2n_ecdhe_server_key_send(struct s2n_connection *conn)
     GUARD(s2n_ecc_write_ecc_params(&conn->secure.server_ecc_params, out, &ecdhparams));
 
     if (conn->actual_protocol_version == S2N_TLS12) {
-        GUARD(s2n_stuffer_write_uint8(out, s2n_hash_alg_to_tls[ conn->secure.conn_hash_alg ]));
+        GUARD(s2n_stuffer_write_uint8(out, s2n_hash_alg_to_tls[conn->secure.conn_hash_alg]));
         GUARD(s2n_stuffer_write_uint8(out, conn->secure.conn_sig_alg));
     }
 
@@ -203,7 +203,7 @@ static int s2n_dhe_server_key_send(struct s2n_connection *conn)
     GUARD(s2n_dh_params_to_p_g_Ys(&conn->secure.server_dh_params, out, &serverDHparams));
 
     if (conn->actual_protocol_version == S2N_TLS12) {
-        GUARD(s2n_stuffer_write_uint8(out, s2n_hash_alg_to_tls[ conn->secure.conn_hash_alg ]));
+        GUARD(s2n_stuffer_write_uint8(out, s2n_hash_alg_to_tls[conn->secure.conn_hash_alg]));
         GUARD(s2n_stuffer_write_uint8(out, conn->secure.conn_sig_alg));
     }
 
@@ -213,21 +213,21 @@ static int s2n_dhe_server_key_send(struct s2n_connection *conn)
     GUARD(s2n_hash_update(&conn->secure.signature_hash, serverDHparams.data, serverDHparams.size));
 
     GUARD(s2n_write_signature_blob(out, &conn->config->cert_and_key_pairs->private_key, &conn->secure.signature_hash));
-    
+
     return 0;
 }
 
 static int s2n_write_signature_blob(struct s2n_stuffer *out, const struct s2n_pkey *priv_key, struct s2n_hash_state *digest)
 {
     struct s2n_blob signature;
-    
+
     /* Leave signature length blank for now until we're done signing */
     uint16_t sig_len = 0;
     GUARD(s2n_stuffer_write_uint16(out, sig_len));
-    
+
     int max_signature_size = s2n_pkey_size(priv_key);
-    signature.size = max_signature_size;
-    signature.data = s2n_stuffer_raw_write(out, signature.size);
+    signature.size         = max_signature_size;
+    signature.data         = s2n_stuffer_raw_write(out, signature.size);
     notnull_check(signature.data);
 
     S2N_ERROR_IF(s2n_pkey_sign(priv_key, digest, &signature) < 0, S2N_ERR_DH_FAILED_SIGNING);

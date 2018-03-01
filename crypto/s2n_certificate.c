@@ -43,7 +43,7 @@ int s2n_send_cert_chain(struct s2n_stuffer *out, struct s2n_cert_chain *chain)
 
     struct s2n_cert *cur_cert = chain->head;
     while (cur_cert) {
-        notnull_check(cur_cert); 
+        notnull_check(cur_cert);
         GUARD(s2n_stuffer_write_uint24(out, cur_cert->raw.size));
         GUARD(s2n_stuffer_write_bytes(out, cur_cert->raw.data, cur_cert->raw.size));
         cur_cert = cur_cert->next;
@@ -52,7 +52,8 @@ int s2n_send_cert_chain(struct s2n_stuffer *out, struct s2n_cert_chain *chain)
     return 0;
 }
 
-int s2n_send_empty_cert_chain(struct s2n_stuffer *out) {
+int s2n_send_empty_cert_chain(struct s2n_stuffer *out)
+{
     notnull_check(out);
     GUARD(s2n_stuffer_write_uint24(out, 0));
     return 0;

@@ -13,20 +13,20 @@
  * permissions and limitations under the License.
  */
 
+#include "tls/s2n_signature_algorithms.h"
 #include "crypto/s2n_fips.h"
 #include "error/s2n_errno.h"
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_tls_digest_preferences.h"
-#include "tls/s2n_signature_algorithms.h"
 #include "utils/s2n_safety.h"
 
 static int s2n_sig_hash_algs_pairs_set(struct s2n_sig_hash_alg_pairs *sig_hash_algs, uint8_t sig_alg, uint8_t hash_alg)
 {
     S2N_ERROR_IF(hash_alg >= TLS_HASH_ALGORITHM_COUNT, S2N_ERR_HASH_INVALID_ALGORITHM);
     S2N_ERROR_IF(sig_alg >= TLS_SIGNATURE_ALGORITHM_COUNT, S2N_ERR_INVALID_SIGNATURE_ALGORITHM);
-    
+
     sig_hash_algs->matrix[sig_alg][hash_alg] = 1;
-    
+
     return 0;
 }
 
@@ -38,8 +38,8 @@ static int s2n_sig_hash_alg_pairs_get(struct s2n_sig_hash_alg_pairs *sig_hash_al
     return sig_hash_algs->matrix[sig_alg][hash_alg];
 }
 
-int s2n_set_signature_hash_pair_from_preference_list(struct s2n_connection *conn, struct s2n_sig_hash_alg_pairs *sig_hash_algs, 
-                                                        s2n_hash_algorithm *hash, s2n_signature_algorithm *sig)
+int s2n_set_signature_hash_pair_from_preference_list(struct s2n_connection *conn, struct s2n_sig_hash_alg_pairs *sig_hash_algs,
+    s2n_hash_algorithm *hash, s2n_signature_algorithm *sig)
 {
     /* This function could be called in two places: after receiving the
      * ClientHello and parsing the extensions and cipher suites, and after
@@ -51,10 +51,10 @@ int s2n_set_signature_hash_pair_from_preference_list(struct s2n_connection *conn
      * overridden by the signature_algorithms extension. If the server chooses an ECDHE_ECDSA
      * cipher suite, this will be overridden to SHA1.
      */
-    s2n_hash_algorithm hash_alg_chosen = S2N_HASH_MD5_SHA1;
+    s2n_hash_algorithm hash_alg_chosen     = S2N_HASH_MD5_SHA1;
     s2n_signature_algorithm sig_alg_chosen = S2N_SIGNATURE_RSA;
     if (cipher_suite_auth_method == S2N_AUTHENTICATION_ECDSA) {
-        sig_alg_chosen = S2N_SIGNATURE_ECDSA;
+        sig_alg_chosen  = S2N_SIGNATURE_ECDSA;
         hash_alg_chosen = S2N_HASH_SHA1;
     }
 
@@ -63,7 +63,7 @@ int s2n_set_signature_hash_pair_from_preference_list(struct s2n_connection *conn
     }
 
     /* Override default if there were signature/hash pairs available for this signature algorithm */
-    for(int i = 0; i < sizeof(s2n_preferred_hashes) / sizeof(s2n_preferred_hashes[0]); i++) {
+    for (int i = 0; i < sizeof(s2n_preferred_hashes) / sizeof(s2n_preferred_hashes[0]); i++) {
         if (s2n_sig_hash_alg_pairs_get(sig_hash_algs, sig_alg_chosen, s2n_preferred_hashes[i]) == 1) {
             /* Just set hash_alg_chosen because sig_alg_chosen was set above based on cert type */
             hash_alg_chosen = s2n_hash_tls_to_alg[s2n_preferred_hashes[i]];
@@ -71,8 +71,8 @@ int s2n_set_signature_hash_pair_from_preference_list(struct s2n_connection *conn
     }
 
     *hash = hash_alg_chosen;
-    *sig = sig_alg_chosen;
-    
+    *sig  = sig_alg_chosen;
+
     return 0;
 }
 
@@ -89,7 +89,7 @@ int s2n_get_signature_hash_pair_if_supported(struct s2n_stuffer *in, s2n_hash_al
      */
     int sig_alg_matched = 0;
     for (int i = 0; i < sizeof(s2n_preferred_signature_algorithms) / sizeof(s2n_preferred_signature_algorithms[0]); i++) {
-        if(s2n_preferred_signature_algorithms[i] == signature_algorithm) {
+        if (s2n_preferred_signature_algorithms[i] == signature_algorithm) {
             sig_alg_matched = 1;
         }
     }
@@ -118,12 +118,12 @@ int s2n_get_signature_hash_pair_if_supported(struct s2n_stuffer *in, s2n_hash_al
 int s2n_send_supported_signature_algorithms(struct s2n_stuffer *out)
 {
     /* The array of hashes and signature algorithms we support */
-    uint16_t preferred_hashes_len = sizeof(s2n_preferred_hashes) / sizeof(s2n_preferred_hashes[0]);
-    uint16_t num_signature_algs = 2;
+    uint16_t preferred_hashes_len  = sizeof(s2n_preferred_hashes) / sizeof(s2n_preferred_hashes[0]);
+    uint16_t num_signature_algs    = 2;
     uint16_t preferred_hashes_size = preferred_hashes_len * num_signature_algs * 2;
     GUARD(s2n_stuffer_write_uint16(out, preferred_hashes_size));
 
-    for (int i =  0; i < preferred_hashes_len; i++) {
+    for (int i = 0; i < preferred_hashes_len; i++) {
         GUARD(s2n_stuffer_write_uint8(out, s2n_preferred_hashes[i]));
         GUARD(s2n_stuffer_write_uint8(out, TLS_SIGNATURE_ALGORITHM_ECDSA));
 
@@ -154,12 +154,12 @@ int s2n_recv_supported_signature_algorithms(struct s2n_connection *conn, struct 
 
     /* Store all of the pairs received. Preference order and whether or not the
      * algorithms are even supported will factor in during selection */
-    for(int i = 0; i < pairs_available; i++) {
+    for (int i = 0; i < pairs_available; i++) {
         uint8_t hash_alg = hash_sig_pairs[2 * i];
-        uint8_t sig_alg = hash_sig_pairs[2 * i + 1];
+        uint8_t sig_alg  = hash_sig_pairs[2 * i + 1];
 
         s2n_sig_hash_algs_pairs_set(sig_hash_algs, sig_alg, hash_alg);
     }
-    
+
     return 0;
 }

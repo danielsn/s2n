@@ -18,8 +18,6 @@
 
 #include "tls/s2n_config.h"
 
-
-
 int mock_clock(void *in, uint64_t *out)
 {
     *out = *(uint64_t *)in;

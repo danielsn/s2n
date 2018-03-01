@@ -16,8 +16,8 @@
 #include "s2n_test.h"
 #include <s2n.h>
 
-#include <stdlib.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 #include "testlib/s2n_testlib.h"
 
@@ -92,7 +92,6 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_config_add_dhparams(server_config, dhparams_pem));
     EXPECT_NOT_NULL(default_cipher_preferences = server_config->cipher_preferences);
 
-
     /*
      * Test optional client auth using **s2n_config_set_client_auth_type** with a valid client cert provided.
      */
@@ -116,7 +115,7 @@ int main(int argc, char **argv)
 
         /* Craft a cipher preference with a cipher_idx cipher. */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -124,7 +123,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        server_cipher_preferences.suites = &cur_cipher;
+        server_cipher_preferences.suites  = &cur_cipher;
         client_config->cipher_preferences = &server_cipher_preferences;
         server_config->cipher_preferences = &server_cipher_preferences;
 
@@ -157,13 +156,12 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_free(server_conn));
 
         for (int i = 0; i < 2; i++) {
-           EXPECT_SUCCESS(close(server_to_client[i]));
-           EXPECT_SUCCESS(close(client_to_server[i]));
+            EXPECT_SUCCESS(close(server_to_client[i]));
+            EXPECT_SUCCESS(close(client_to_server[i]));
         }
     }
 
     EXPECT_SUCCESS(s2n_config_free(client_config));
-
 
     /*
      * Test optional client auth using **s2n_config_set_client_auth_type** with no client cert provided.
@@ -187,7 +185,7 @@ int main(int argc, char **argv)
 
         /* Craft a cipher preference with a cipher_idx cipher. */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -195,7 +193,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        server_cipher_preferences.suites = &cur_cipher;
+        server_cipher_preferences.suites  = &cur_cipher;
         client_config->cipher_preferences = &server_cipher_preferences;
         server_config->cipher_preferences = &server_cipher_preferences;
 
@@ -227,9 +225,8 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_free(client_conn));
         EXPECT_SUCCESS(s2n_connection_free(server_conn));
     }
-    
-    EXPECT_SUCCESS(s2n_config_free(client_config));
 
+    EXPECT_SUCCESS(s2n_config_free(client_config));
 
     /*
      * Test optional client auth using **s2n_connection_set_client_auth_type** with a valid client cert provided.
@@ -254,7 +251,7 @@ int main(int argc, char **argv)
 
         /* Craft a cipher preference with a cipher_idx cipher. */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -262,7 +259,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        server_cipher_preferences.suites = &cur_cipher;
+        server_cipher_preferences.suites  = &cur_cipher;
         client_config->cipher_preferences = &server_cipher_preferences;
         server_config->cipher_preferences = &server_cipher_preferences;
 
@@ -301,13 +298,12 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_free(server_conn));
 
         for (int i = 0; i < 2; i++) {
-           EXPECT_SUCCESS(close(server_to_client[i]));
-           EXPECT_SUCCESS(close(client_to_server[i]));
+            EXPECT_SUCCESS(close(server_to_client[i]));
+            EXPECT_SUCCESS(close(client_to_server[i]));
         }
     }
 
     EXPECT_SUCCESS(s2n_config_free(client_config));
-
 
     /*
      * Test optional client auth using **s2n_connection_set_client_auth_type** with no client cert provided.
@@ -331,7 +327,7 @@ int main(int argc, char **argv)
 
         /* Craft a cipher preference with a cipher_idx cipher. */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -339,7 +335,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        server_cipher_preferences.suites = &cur_cipher;
+        server_cipher_preferences.suites  = &cur_cipher;
         client_config->cipher_preferences = &server_cipher_preferences;
         server_config->cipher_preferences = &server_cipher_preferences;
 
@@ -378,13 +374,12 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_free(server_conn));
 
         for (int i = 0; i < 2; i++) {
-           EXPECT_SUCCESS(close(server_to_client[i]));
-           EXPECT_SUCCESS(close(client_to_server[i]));
+            EXPECT_SUCCESS(close(server_to_client[i]));
+            EXPECT_SUCCESS(close(client_to_server[i]));
         }
     }
 
     EXPECT_SUCCESS(s2n_config_free(client_config));
-
 
     /*
      * Test optional client auth using **s2n_config_set_client_auth_type** with an incorrect client
@@ -418,7 +413,7 @@ int main(int argc, char **argv)
 
         /* Craft a cipher preference with a cipher_idx cipher. */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -426,7 +421,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        server_cipher_preferences.suites = &cur_cipher;
+        server_cipher_preferences.suites  = &cur_cipher;
         client_config->cipher_preferences = &server_cipher_preferences;
         server_config->cipher_preferences = &server_cipher_preferences;
 
@@ -459,9 +454,8 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_free(client_conn));
         EXPECT_SUCCESS(s2n_connection_free(server_conn));
     }
-    
-    EXPECT_SUCCESS(s2n_config_free(client_config));
 
+    EXPECT_SUCCESS(s2n_config_free(client_config));
 
     EXPECT_SUCCESS(s2n_config_free(server_config));
     free(cert_chain_pem);

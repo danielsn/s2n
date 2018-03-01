@@ -24,20 +24,20 @@
 
 #include "error/s2n_errno.h"
 
+#include "tls/s2n_alerts.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_handshake.h"
 #include "tls/s2n_record.h"
 #include "tls/s2n_resume.h"
-#include "tls/s2n_alerts.h"
 #include "tls/s2n_tls.h"
 
 #include "stuffer/s2n_stuffer.h"
 
-#include "utils/s2n_socket.h"
-#include "utils/s2n_safety.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_safety.h"
+#include "utils/s2n_socket.h"
 
-int s2n_read_full_record(struct s2n_connection *conn, uint8_t * record_type, int *isSSLv2)
+int s2n_read_full_record(struct s2n_connection *conn, uint8_t *record_type, int *isSSLv2)
 {
     int r;
 
@@ -124,10 +124,10 @@ int s2n_read_full_record(struct s2n_connection *conn, uint8_t * record_type, int
     return 0;
 }
 
-ssize_t s2n_recv(struct s2n_connection * conn, void *buf, ssize_t size, s2n_blocked_status * blocked)
+ssize_t s2n_recv(struct s2n_connection *conn, void *buf, ssize_t size, s2n_blocked_status *blocked)
 {
-    ssize_t bytes_read = 0;
-    struct s2n_blob out = {.data = (uint8_t *) buf };
+    ssize_t bytes_read  = 0;
+    struct s2n_blob out = {.data = (uint8_t *)buf };
 
     if (conn->closed) {
         GUARD(s2n_connection_wipe(conn));
@@ -207,7 +207,7 @@ ssize_t s2n_recv(struct s2n_connection * conn, void *buf, ssize_t size, s2n_bloc
     return bytes_read;
 }
 
-int s2n_recv_close_notify(struct s2n_connection *conn, s2n_blocked_status * blocked)
+int s2n_recv_close_notify(struct s2n_connection *conn, s2n_blocked_status *blocked)
 {
     uint8_t record_type;
     int isSSLv2;

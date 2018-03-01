@@ -14,9 +14,9 @@
  */
 
 #include <stdint.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #include "error/s2n_errno.h"
 
@@ -25,7 +25,7 @@
 #include "utils/s2n_safety.h"
 
 static long page_size = 4096;
-static int use_mlock = 1;
+static int use_mlock  = 1;
 
 int s2n_mem_init(void)
 {
@@ -46,10 +46,10 @@ int s2n_mem_cleanup(void)
 
 int s2n_alloc(struct s2n_blob *b, uint32_t size)
 {
-    b->data = NULL;
-    b->size = 0;
+    b->data      = NULL;
+    b->size      = 0;
     b->allocated = 0;
-    b->mlocked = 0;
+    b->mlocked   = 0;
     GUARD(s2n_realloc(b, size));
     return 0;
 }
@@ -71,8 +71,8 @@ int s2n_realloc(struct s2n_blob *b, uint32_t size)
         data = realloc(b->data, size);
         S2N_ERROR_IF(!data, S2N_ERR_ALLOC);
 
-        b->data = data;
-        b->size = size;
+        b->data      = data;
+        b->size      = size;
         b->allocated = size;
         return 0;
     }
@@ -86,8 +86,8 @@ int s2n_realloc(struct s2n_blob *b, uint32_t size)
         GUARD(s2n_free(b));
     }
 
-    b->data = data;
-    b->size = size;
+    b->data      = data;
+    b->size      = size;
     b->allocated = allocate;
 
 #ifdef MADV_DONTDUMP
@@ -114,8 +114,8 @@ int s2n_free(struct s2n_blob *b)
     }
 
     free(b->data);
-    b->data = NULL;
-    b->size = 0;
+    b->data      = NULL;
+    b->size      = 0;
     b->allocated = 0;
 
     S2N_ERROR_IF(munlock_rc < 0, S2N_ERR_MUNLOCK);
@@ -130,7 +130,7 @@ int s2n_dup(struct s2n_blob *from, struct s2n_blob *to)
     eq_check(to->data, NULL);
 
     GUARD(s2n_alloc(to, from->size));
-    
+
     memcpy_check(to->data, from->data, to->size);
 
     return 0;

@@ -56,7 +56,7 @@ static int s2n_ecdsa_sign(const struct s2n_pkey *priv, struct s2n_hash_state *di
     signature->size = signature_size;
 
     GUARD(s2n_hash_reset(digest));
-    
+
     return 0;
 }
 
@@ -71,20 +71,20 @@ static int s2n_ecdsa_verify(const struct s2n_pkey *pub, struct s2n_hash_state *d
 
     uint8_t digest_out[S2N_MAX_DIGEST_LEN];
     GUARD(s2n_hash_digest(digest, digest_out, digest_length));
-    
+
     /* ECDSA_verify ignores the first parameter */
     GUARD_OSSL(ECDSA_verify(0, digest_out, digest_length, signature->data, signature->size, key->ec_key), S2N_ERR_VERIFY_SIGNATURE);
 
     GUARD(s2n_hash_reset(digest));
-    
+
     return 0;
 }
 
-static int s2n_ecdsa_keys_match(const struct s2n_pkey *pub, const struct s2n_pkey *priv) 
+static int s2n_ecdsa_keys_match(const struct s2n_pkey *pub, const struct s2n_pkey *priv)
 {
     uint8_t input[16];
     struct s2n_blob random_input;
-    struct s2n_blob signature = { 0 };
+    struct s2n_blob signature      = { 0 };
     struct s2n_hash_state state_in = { 0 }, state_out = { 0 };
 
     random_input.data = input;
@@ -108,7 +108,7 @@ static int s2n_ecdsa_keys_match(const struct s2n_pkey *pub, const struct s2n_pke
     int rc = 0;
     goto cleanup;
 
-    //cppcheck-suppress unusedLabel
+//cppcheck-suppress unusedLabel
 failed:
     rc = -1;
 
@@ -126,7 +126,7 @@ static int s2n_ecdsa_key_free(struct s2n_pkey *pkey)
     if (ecdsa_key->ec_key == NULL) {
         return 0;
     }
-    
+
     EC_KEY_free(ecdsa_key->ec_key);
     ecdsa_key->ec_key = NULL;
 
@@ -144,7 +144,7 @@ int s2n_evp_pkey_to_ecdsa_private_key(s2n_ecdsa_private_key *ecdsa_key, EVP_PKEY
 {
     EC_KEY *ec_key = EVP_PKEY_get1_EC_KEY(evp_private_key);
     S2N_ERROR_IF(ec_key == NULL, S2N_ERR_DECODE_PRIVATE_KEY);
-    
+
     if (!EC_KEY_check_key(ec_key)) {
         EC_KEY_free(ec_key);
         S2N_ERROR(S2N_ERR_KEY_CHECK);
@@ -158,24 +158,25 @@ int s2n_evp_pkey_to_ecdsa_public_key(s2n_ecdsa_public_key *ecdsa_key, EVP_PKEY *
 {
     EC_KEY *ec_key = EVP_PKEY_get1_EC_KEY(evp_public_key);
     S2N_ERROR_IF(ec_key == NULL, S2N_ERR_DECODE_CERTIFICATE);
-    
+
     if (!EC_KEY_check_key(ec_key)) {
         EC_KEY_free(ec_key);
         S2N_ERROR(S2N_ERR_KEY_CHECK);
     }
-    
+
     ecdsa_key->ec_key = ec_key;
     return 0;
 }
 
-int s2n_ecdsa_pkey_init(struct s2n_pkey *pkey) {
-    pkey->size = &s2n_ecdsa_der_signature_size;
-    pkey->sign = &s2n_ecdsa_sign;
-    pkey->verify = &s2n_ecdsa_verify;
-    pkey->encrypt = NULL; /* No function for encryption */
-    pkey->decrypt = NULL; /* No function for decryption */
-    pkey->match = &s2n_ecdsa_keys_match;
-    pkey->free = &s2n_ecdsa_key_free;
+int s2n_ecdsa_pkey_init(struct s2n_pkey *pkey)
+{
+    pkey->size      = &s2n_ecdsa_der_signature_size;
+    pkey->sign      = &s2n_ecdsa_sign;
+    pkey->verify    = &s2n_ecdsa_verify;
+    pkey->encrypt   = NULL; /* No function for encryption */
+    pkey->decrypt   = NULL; /* No function for decryption */
+    pkey->match     = &s2n_ecdsa_keys_match;
+    pkey->free      = &s2n_ecdsa_key_free;
     pkey->check_key = &s2n_ecdsa_check_key_exists;
     return 0;
 }

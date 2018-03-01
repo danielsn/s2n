@@ -13,9 +13,9 @@
  * permissions and limitations under the License.
  */
 
-#include <sys/param.h>
 #include <errno.h>
 #include <s2n.h>
+#include <sys/param.h>
 
 #include "error/s2n_errno.h"
 
@@ -28,17 +28,17 @@
 
 #include "crypto/s2n_cipher.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_safety.h"
 
-int s2n_flush(struct s2n_connection *conn, s2n_blocked_status * blocked)
+int s2n_flush(struct s2n_connection *conn, s2n_blocked_status *blocked)
 {
     int w;
 
     *blocked = S2N_BLOCKED_ON_WRITE;
 
-    /* Write any data that's already pending */
-  WRITE:
+/* Write any data that's already pending */
+WRITE:
     while (s2n_stuffer_data_available(&conn->out)) {
         w = s2n_connection_send_stuffer(&conn->out, conn, s2n_stuffer_data_available(&conn->out));
         if (w < 0) {
@@ -90,7 +90,7 @@ int s2n_flush(struct s2n_connection *conn, s2n_blocked_status * blocked)
     return 0;
 }
 
-ssize_t s2n_send(struct s2n_connection * conn, const void *buf, ssize_t size, s2n_blocked_status * blocked)
+ssize_t s2n_send(struct s2n_connection *conn, const void *buf, ssize_t size, s2n_blocked_status *blocked)
 {
     ssize_t user_data_sent;
     int max_payload_size;
@@ -123,7 +123,7 @@ ssize_t s2n_send(struct s2n_connection * conn, const void *buf, ssize_t size, s2
 
     /* Now write the data we were asked to send this round */
     while (size - conn->current_user_data_consumed) {
-        struct s2n_blob in = {.data = ((uint8_t *)(uintptr_t) buf) + conn->current_user_data_consumed };
+        struct s2n_blob in = {.data = ((uint8_t *)(uintptr_t)buf) + conn->current_user_data_consumed };
         in.size = MIN(size - conn->current_user_data_consumed, max_payload_size);
 
         /* Don't split messages in server mode for interoperability with naive clients.
@@ -131,7 +131,7 @@ ssize_t s2n_send(struct s2n_connection * conn, const void *buf, ssize_t size, s2
          */
         if (conn->actual_protocol_version < S2N_TLS11 && writer->cipher_suite->record_alg->cipher->type == S2N_CBC && conn->mode != S2N_SERVER) {
             if (in.size > 1 && cbcHackUsed == 0) {
-                in.size = 1;
+                in.size     = 1;
                 cbcHackUsed = 1;
             }
         }

@@ -15,21 +15,21 @@
 
 #include "s2n_test.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <s2n.h>
 
 #include "testlib/s2n_testlib.h"
 
-#include "tls/s2n_cipher_suites.h"
-#include "stuffer/s2n_stuffer.h"
 #include "crypto/s2n_cipher.h"
+#include "crypto/s2n_hmac.h"
+#include "stuffer/s2n_stuffer.h"
+#include "tls/s2n_cipher_suites.h"
+#include "tls/s2n_prf.h"
+#include "tls/s2n_record.h"
 #include "utils/s2n_random.h"
 #include "utils/s2n_safety.h"
-#include "crypto/s2n_hmac.h"
-#include "tls/s2n_record.h"
-#include "tls/s2n_prf.h"
 
 static int destroy_server_keys(struct s2n_connection *server_conn)
 {
@@ -52,11 +52,11 @@ int main(int argc, char **argv)
 {
     struct s2n_connection *conn;
     uint8_t random_data[S2N_SMALL_FRAGMENT_LENGTH + 1];
-    uint8_t aes128_key[] = "123456789012345";
-    uint8_t aes256_key[] = "1234567890123456789012345678901";
-    struct s2n_blob aes128 = {.data = aes128_key,.size = sizeof(aes128_key) };
-    struct s2n_blob aes256 = {.data = aes256_key,.size = sizeof(aes256_key) };
-    struct s2n_blob r = {.data = random_data, .size = sizeof(random_data)};
+    uint8_t aes128_key[]   = "123456789012345";
+    uint8_t aes256_key[]   = "1234567890123456789012345678901";
+    struct s2n_blob aes128 = {.data = aes128_key, .size = sizeof(aes128_key) };
+    struct s2n_blob aes256 = {.data = aes256_key, .size = sizeof(aes256_key) };
+    struct s2n_blob r = {.data = random_data, .size = sizeof(random_data) };
 
     BEGIN_TEST();
 
@@ -73,23 +73,23 @@ int main(int argc, char **argv)
 
     int max_fragment = S2N_SMALL_FRAGMENT_LENGTH;
     for (int i = 0; i < max_fragment; i++) {
-        struct s2n_blob in = {.data = random_data,.size = i };
+        struct s2n_blob in = {.data = random_data, .size = i };
         int bytes_written;
 
         EXPECT_SUCCESS(s2n_connection_wipe(conn));
         EXPECT_SUCCESS(s2n_connection_prefer_low_latency(conn));
-        conn->server_protocol_version = S2N_TLS12;
-        conn->client_protocol_version = S2N_TLS12;
-        conn->actual_protocol_version = S2N_TLS12;
-        conn->server = &conn->initial;
-        conn->client = &conn->initial;
+        conn->server_protocol_version          = S2N_TLS12;
+        conn->client_protocol_version          = S2N_TLS12;
+        conn->actual_protocol_version          = S2N_TLS12;
+        conn->server                           = &conn->initial;
+        conn->client                           = &conn->initial;
         conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes128_gcm;
         EXPECT_SUCCESS(destroy_server_keys(conn));
         EXPECT_SUCCESS(setup_server_keys(conn, &aes128));
         EXPECT_SUCCESS(bytes_written = s2n_record_write(conn, TLS_APPLICATION_DATA, &in));
 
-        const int overhead = 8   /* IV */
-            + 16; /* TAG */
+        const int overhead = 8 /* IV */
+            + 16;              /* TAG */
         if (i < max_fragment - overhead) {
             EXPECT_EQUAL(bytes_written, i);
         } else {
@@ -130,9 +130,9 @@ int main(int argc, char **argv)
 
         /* Start over */
         EXPECT_SUCCESS(s2n_connection_wipe(conn));
-        conn->server_protocol_version = S2N_TLS12;
-        conn->client_protocol_version = S2N_TLS12;
-        conn->actual_protocol_version = S2N_TLS12;
+        conn->server_protocol_version          = S2N_TLS12;
+        conn->client_protocol_version          = S2N_TLS12;
+        conn->actual_protocol_version          = S2N_TLS12;
         conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes128_gcm;
         EXPECT_SUCCESS(destroy_server_keys(conn));
         EXPECT_SUCCESS(setup_server_keys(conn, &aes128));
@@ -157,9 +157,9 @@ int main(int argc, char **argv)
         /* Tamper with the explicit IV and ensure decryption fails */
         for (int j = 0; j < S2N_TLS_GCM_EXPLICIT_IV_LEN; j++) {
             EXPECT_SUCCESS(s2n_connection_wipe(conn));
-            conn->server_protocol_version = S2N_TLS12;
-            conn->client_protocol_version = S2N_TLS12;
-            conn->actual_protocol_version = S2N_TLS12;
+            conn->server_protocol_version          = S2N_TLS12;
+            conn->client_protocol_version          = S2N_TLS12;
+            conn->actual_protocol_version          = S2N_TLS12;
             conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes128_gcm;
             EXPECT_SUCCESS(destroy_server_keys(conn));
             EXPECT_SUCCESS(setup_server_keys(conn, &aes128));
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
             EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->header_in));
             EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->header_in, 5));
             EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->in, s2n_stuffer_data_available(&conn->out)));
-            conn->in.blob.data[5 + j] ++;
+            conn->in.blob.data[5 + j]++;
             EXPECT_SUCCESS(s2n_record_header_parse(conn, &content_type, &fragment_length));
             EXPECT_FAILURE(s2n_record_parse(conn));
             EXPECT_EQUAL(content_type, TLS_APPLICATION_DATA);
@@ -182,9 +182,9 @@ int main(int argc, char **argv)
         /* Tamper with the TAG and ensure decryption fails */
         for (int j = 0; j < S2N_TLS_GCM_TAG_LEN; j++) {
             EXPECT_SUCCESS(s2n_connection_wipe(conn));
-            conn->server_protocol_version = S2N_TLS12;
-            conn->client_protocol_version = S2N_TLS12;
-            conn->actual_protocol_version = S2N_TLS12;
+            conn->server_protocol_version          = S2N_TLS12;
+            conn->client_protocol_version          = S2N_TLS12;
+            conn->actual_protocol_version          = S2N_TLS12;
             conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes128_gcm;
             EXPECT_SUCCESS(destroy_server_keys(conn));
             EXPECT_SUCCESS(setup_server_keys(conn, &aes128));
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
             EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->header_in));
             EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->header_in, 5));
             EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->in, s2n_stuffer_data_available(&conn->out)));
-            conn->in.blob.data[s2n_stuffer_data_available(&conn->in) - j - 1] ++;
+            conn->in.blob.data[s2n_stuffer_data_available(&conn->in) - j - 1]++;
             EXPECT_SUCCESS(s2n_record_header_parse(conn, &content_type, &fragment_length));
             EXPECT_FAILURE(s2n_record_parse(conn));
             EXPECT_EQUAL(content_type, TLS_APPLICATION_DATA);
@@ -207,9 +207,9 @@ int main(int argc, char **argv)
         /* Tamper with the ciphertext and ensure decryption fails */
         for (int j = 0; j < i - S2N_TLS_GCM_TAG_LEN; j++) {
             EXPECT_SUCCESS(s2n_connection_wipe(conn));
-            conn->server_protocol_version = S2N_TLS12;
-            conn->client_protocol_version = S2N_TLS12;
-            conn->actual_protocol_version = S2N_TLS12;
+            conn->server_protocol_version          = S2N_TLS12;
+            conn->client_protocol_version          = S2N_TLS12;
+            conn->actual_protocol_version          = S2N_TLS12;
             conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes128_gcm;
             EXPECT_SUCCESS(destroy_server_keys(conn));
             EXPECT_SUCCESS(setup_server_keys(conn, &aes128));
@@ -239,23 +239,23 @@ int main(int argc, char **argv)
     conn->actual_protocol_version = S2N_TLS12;
 
     for (int i = 0; i <= max_fragment + 1; i++) {
-        struct s2n_blob in = {.data = random_data,.size = i };
+        struct s2n_blob in = {.data = random_data, .size = i };
         int bytes_written;
 
         EXPECT_SUCCESS(s2n_connection_wipe(conn));
         /* Set prefer low latency for S2N_SMALL_FRAGMENT_LENGTH for */
         EXPECT_SUCCESS(s2n_connection_prefer_low_latency(conn));
-        conn->server_protocol_version = S2N_TLS12;
-        conn->client_protocol_version = S2N_TLS12;
-        conn->actual_protocol_version = S2N_TLS12;
+        conn->server_protocol_version          = S2N_TLS12;
+        conn->client_protocol_version          = S2N_TLS12;
+        conn->actual_protocol_version          = S2N_TLS12;
         conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes256_gcm;
         EXPECT_SUCCESS(destroy_server_keys(conn));
         EXPECT_SUCCESS(setup_server_keys(conn, &aes256));
         conn->actual_protocol_version = S2N_TLS12;
         EXPECT_SUCCESS(bytes_written = s2n_record_write(conn, TLS_APPLICATION_DATA, &in));
 
-        const int overhead = 8   /* IV */
-            + 16; /* TAG */
+        const int overhead = 8 /* IV */
+            + 16;              /* TAG */
         if (i < max_fragment - overhead) {
             EXPECT_EQUAL(bytes_written, i);
         } else {
@@ -295,9 +295,9 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->in));
 
         EXPECT_SUCCESS(s2n_connection_wipe(conn));
-        conn->server_protocol_version = S2N_TLS12;
-        conn->client_protocol_version = S2N_TLS12;
-        conn->actual_protocol_version = S2N_TLS12;
+        conn->server_protocol_version          = S2N_TLS12;
+        conn->client_protocol_version          = S2N_TLS12;
+        conn->actual_protocol_version          = S2N_TLS12;
         conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes256_gcm;
         EXPECT_SUCCESS(destroy_server_keys(conn));
         EXPECT_SUCCESS(setup_server_keys(conn, &aes256));
@@ -323,9 +323,9 @@ int main(int argc, char **argv)
         /* Tamper with the IV and ensure decryption fails */
         for (int j = 0; j < S2N_TLS_GCM_IV_LEN; j++) {
             EXPECT_SUCCESS(s2n_connection_wipe(conn));
-            conn->server_protocol_version = S2N_TLS12;
-            conn->client_protocol_version = S2N_TLS12;
-            conn->actual_protocol_version = S2N_TLS12;
+            conn->server_protocol_version          = S2N_TLS12;
+            conn->client_protocol_version          = S2N_TLS12;
+            conn->actual_protocol_version          = S2N_TLS12;
             conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes256_gcm;
             EXPECT_SUCCESS(destroy_server_keys(conn));
             EXPECT_SUCCESS(setup_server_keys(conn, &aes256));
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
             EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->header_in));
             EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->header_in, 5));
             EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->in, s2n_stuffer_data_available(&conn->out)));
-            conn->in.blob.data[5 + j] ++;
+            conn->in.blob.data[5 + j]++;
             EXPECT_SUCCESS(s2n_record_header_parse(conn, &content_type, &fragment_length));
             EXPECT_FAILURE(s2n_record_parse(conn));
             EXPECT_EQUAL(content_type, TLS_APPLICATION_DATA);
@@ -349,9 +349,9 @@ int main(int argc, char **argv)
         /* Tamper with the TAG and ensure decryption fails */
         for (int j = 0; j < S2N_TLS_GCM_TAG_LEN; j++) {
             EXPECT_SUCCESS(s2n_connection_wipe(conn));
-            conn->server_protocol_version = S2N_TLS12;
-            conn->client_protocol_version = S2N_TLS12;
-            conn->actual_protocol_version = S2N_TLS12;
+            conn->server_protocol_version          = S2N_TLS12;
+            conn->client_protocol_version          = S2N_TLS12;
+            conn->actual_protocol_version          = S2N_TLS12;
             conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes256_gcm;
             EXPECT_SUCCESS(destroy_server_keys(conn));
             EXPECT_SUCCESS(setup_server_keys(conn, &aes256));
@@ -363,7 +363,7 @@ int main(int argc, char **argv)
             EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->header_in));
             EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->header_in, 5));
             EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->in, s2n_stuffer_data_available(&conn->out)));
-            conn->in.blob.data[s2n_stuffer_data_available(&conn->in) - j - 1] ++;
+            conn->in.blob.data[s2n_stuffer_data_available(&conn->in) - j - 1]++;
             EXPECT_SUCCESS(s2n_record_header_parse(conn, &content_type, &fragment_length));
             EXPECT_FAILURE(s2n_record_parse(conn));
             EXPECT_EQUAL(content_type, TLS_APPLICATION_DATA);
@@ -375,9 +375,9 @@ int main(int argc, char **argv)
         /* Tamper with the ciphertext and ensure decryption fails */
         for (int j = S2N_TLS_GCM_IV_LEN; j < i - S2N_TLS_GCM_TAG_LEN; j++) {
             EXPECT_SUCCESS(s2n_connection_wipe(conn));
-            conn->server_protocol_version = S2N_TLS12;
-            conn->client_protocol_version = S2N_TLS12;
-            conn->actual_protocol_version = S2N_TLS12;
+            conn->server_protocol_version          = S2N_TLS12;
+            conn->client_protocol_version          = S2N_TLS12;
+            conn->actual_protocol_version          = S2N_TLS12;
             conn->initial.cipher_suite->record_alg = &s2n_record_alg_aes256_gcm;
             EXPECT_SUCCESS(destroy_server_keys(conn));
             EXPECT_SUCCESS(setup_server_keys(conn, &aes256));

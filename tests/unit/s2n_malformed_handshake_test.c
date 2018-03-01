@@ -15,22 +15,22 @@
 
 #include "s2n_test.h"
 
-#include <sys/wait.h>
-#include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <s2n.h>
 
 #include "tls/s2n_connection.h"
 #include "tls/s2n_handshake.h"
 
-#define TLS_ALERT              21
-#define TLS_HANDSHAKE          22
-#define TLS_HEARTBEAT          24
+#define TLS_ALERT 21
+#define TLS_HANDSHAKE 22
+#define TLS_HEARTBEAT 24
 
-#define ZERO_TO_THIRTY_ONE  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, \
-                            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+#define ZERO_TO_THIRTY_ONE 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, \
+                           0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
 
 static uint8_t zero_to_thirty_one[] = { ZERO_TO_THIRTY_ONE };
 
@@ -146,7 +146,7 @@ static uint8_t good_certificate_list[] = {
 };
 
 static uint8_t empty_certificate_list[] = {
-     /* SERVER CERT */
+    /* SERVER CERT */
     0x0B,
 
     /* Length of the handshake message */
@@ -157,7 +157,7 @@ static uint8_t empty_certificate_list[] = {
 };
 
 static uint8_t empty_certificate[] = {
-     /* SERVER CERT */
+    /* SERVER CERT */
     0x0B,
 
     /* Length of the handshake message */
@@ -171,7 +171,7 @@ static uint8_t empty_certificate[] = {
 };
 
 static uint8_t certificate_list_too_large[] = {
-     /* SERVER CERT */
+    /* SERVER CERT */
     0x0B,
 
     /* Length of the handshake message */
@@ -185,7 +185,7 @@ static uint8_t certificate_list_too_large[] = {
 };
 
 static uint8_t certificate_too_large[] = {
-     /* SERVER CERT */
+    /* SERVER CERT */
     0x0B,
 
     /* Length of the handshake message */
@@ -257,9 +257,9 @@ int main(int argc, char **argv)
     /* Pretend the client hello has already been set */
     conn->handshake.handshake_type = NEGOTIATED | FULL_HANDSHAKE;
     conn->handshake.message_number = SERVER_HELLO;
-    conn->server_protocol_version = S2N_TLS12;
-    conn->client_protocol_version = S2N_TLS12;
-    conn->actual_protocol_version = S2N_TLS12;
+    conn->server_protocol_version  = S2N_TLS12;
+    conn->client_protocol_version  = S2N_TLS12;
+    conn->actual_protocol_version  = S2N_TLS12;
 
     /* Create a child process */
     pid = fork();
@@ -306,9 +306,9 @@ int main(int argc, char **argv)
     /* Pretend the client hello has already been set */
     conn->handshake.handshake_type = NEGOTIATED | FULL_HANDSHAKE;
     conn->handshake.message_number = SERVER_HELLO;
-    conn->server_protocol_version = S2N_TLS12;
-    conn->client_protocol_version = S2N_TLS12;
-    conn->actual_protocol_version = S2N_TLS12;
+    conn->server_protocol_version  = S2N_TLS12;
+    conn->client_protocol_version  = S2N_TLS12;
+    conn->actual_protocol_version  = S2N_TLS12;
 
     /* Create a child process */
     pid = fork();
@@ -355,9 +355,9 @@ int main(int argc, char **argv)
     /* Pretend the client hello has already been set */
     conn->handshake.handshake_type = NEGOTIATED | FULL_HANDSHAKE;
     conn->handshake.message_number = SERVER_HELLO;
-    conn->server_protocol_version = S2N_TLS12;
-    conn->client_protocol_version = S2N_TLS12;
-    conn->actual_protocol_version = S2N_TLS12;
+    conn->server_protocol_version  = S2N_TLS12;
+    conn->client_protocol_version  = S2N_TLS12;
+    conn->actual_protocol_version  = S2N_TLS12;
 
     /* Create a child process */
     pid = fork();
@@ -404,9 +404,9 @@ int main(int argc, char **argv)
     /* Pretend the client hello has already been set */
     conn->handshake.handshake_type = NEGOTIATED | FULL_HANDSHAKE;
     conn->handshake.message_number = SERVER_HELLO;
-    conn->server_protocol_version = S2N_TLS12;
-    conn->client_protocol_version = S2N_TLS12;
-    conn->actual_protocol_version = S2N_TLS12;
+    conn->server_protocol_version  = S2N_TLS12;
+    conn->client_protocol_version  = S2N_TLS12;
+    conn->actual_protocol_version  = S2N_TLS12;
 
     /* Create a child process */
     pid = fork();
@@ -453,9 +453,9 @@ int main(int argc, char **argv)
     /* Pretend the client hello has already been set */
     conn->handshake.handshake_type = NEGOTIATED | FULL_HANDSHAKE;
     conn->handshake.message_number = SERVER_HELLO;
-    conn->server_protocol_version = S2N_TLS12;
-    conn->client_protocol_version = S2N_TLS12;
-    conn->actual_protocol_version = S2N_TLS12;
+    conn->server_protocol_version  = S2N_TLS12;
+    conn->client_protocol_version  = S2N_TLS12;
+    conn->actual_protocol_version  = S2N_TLS12;
 
     /* Create a child process */
     pid = fork();
@@ -502,9 +502,9 @@ int main(int argc, char **argv)
     /* Pretend the client hello has already been set */
     conn->handshake.handshake_type = NEGOTIATED | FULL_HANDSHAKE;
     conn->handshake.message_number = SERVER_HELLO;
-    conn->server_protocol_version = S2N_TLS12;
-    conn->client_protocol_version = S2N_TLS12;
-    conn->actual_protocol_version = S2N_TLS12;
+    conn->server_protocol_version  = S2N_TLS12;
+    conn->client_protocol_version  = S2N_TLS12;
+    conn->actual_protocol_version  = S2N_TLS12;
 
     /* Create a child process */
     pid = fork();

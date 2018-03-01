@@ -24,11 +24,11 @@
 #include "stuffer/s2n_stuffer.h"
 
 #include "crypto/s2n_dhe.h"
-#include "crypto/s2n_rsa.h"
 #include "crypto/s2n_pkey.h"
+#include "crypto/s2n_rsa.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_random.h"
+#include "utils/s2n_safety.h"
 
 static int s2n_rsa_client_key_recv(struct s2n_connection *conn)
 {

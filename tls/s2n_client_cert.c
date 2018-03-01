@@ -18,15 +18,14 @@
 #include "crypto/s2n_certificate.h"
 #include "error/s2n_errno.h"
 #include "tls/s2n_cipher_suites.h"
-#include "tls/s2n_connection.h"
 #include "tls/s2n_config.h"
+#include "tls/s2n_connection.h"
 #include "tls/s2n_tls.h"
 
 #include "stuffer/s2n_stuffer.h"
 
 #include "utils/s2n_blob.h"
 #include "utils/s2n_safety.h"
-
 
 int s2n_client_cert_recv(struct s2n_connection *conn)
 {
@@ -52,8 +51,10 @@ int s2n_client_cert_recv(struct s2n_connection *conn)
 
     /* Determine the Cert Type, Verify the Cert, and extract the Public Key */
     S2N_ERROR_IF(s2n_x509_validator_validate_cert_chain(&conn->x509_validator, conn,
-                                                 client_cert_chain.data, client_cert_chain.size,
-                                                        &cert_type, &public_key) != S2N_CERT_OK, S2N_ERR_CERT_UNTRUSTED);
+                     client_cert_chain.data, client_cert_chain.size,
+                     &cert_type, &public_key)
+            != S2N_CERT_OK,
+        S2N_ERR_CERT_UNTRUSTED);
 
     switch (cert_type) {
     case S2N_CERT_TYPE_RSA_SIGN:
@@ -65,14 +66,13 @@ int s2n_client_cert_recv(struct s2n_connection *conn)
     }
 
     s2n_pkey_setup_for_type(&public_key, cert_type);
-    
+
     GUARD(s2n_pkey_check_key_exists(&public_key));
     GUARD(s2n_dup(&client_cert_chain, &conn->secure.client_cert_chain));
     conn->secure.client_public_key = public_key;
-    
+
     return 0;
 }
-
 
 int s2n_client_cert_send(struct s2n_connection *conn)
 {

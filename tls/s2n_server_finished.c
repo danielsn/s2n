@@ -28,7 +28,7 @@
 int s2n_server_finished_recv(struct s2n_connection *conn)
 {
     uint8_t *our_version;
-    int length = S2N_TLS_FINISHED_LEN;
+    int length  = S2N_TLS_FINISHED_LEN;
     our_version = conn->handshake.server_finished;
 
     if (conn->actual_protocol_version == S2N_SSLv3) {
@@ -60,7 +60,7 @@ int s2n_server_finished_send(struct s2n_connection *conn)
     GUARD(s2n_stuffer_write_bytes(&conn->handshake.io, our_version, length));
 
     /* Zero the sequence number */
-    struct s2n_blob seq = {.data = conn->secure.server_sequence_number,.size = S2N_TLS_SEQUENCE_NUM_LEN };
+    struct s2n_blob seq = {.data = conn->secure.server_sequence_number, .size = S2N_TLS_SEQUENCE_NUM_LEN };
     GUARD(s2n_blob_zero(&seq));
 
     /* Update the secure state to active, and point the client at the active state */

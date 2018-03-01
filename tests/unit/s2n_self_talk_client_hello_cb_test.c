@@ -17,10 +17,10 @@
 
 #include "testlib/s2n_testlib.h"
 
+#include <fcntl.h>
+#include <stdint.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <stdint.h>
-#include <fcntl.h>
 
 #include <s2n.h>
 
@@ -34,14 +34,14 @@ int mock_client(int writefd, int readfd, int expect_failure)
     struct s2n_connection *conn;
     struct s2n_config *config;
     s2n_blocked_status blocked;
-    int result = 0;
-    int rc = 0;
+    int result              = 0;
+    int rc                  = 0;
     const char *protocols[] = { "h2", "http/1.1" };
 
     /* Give the server a chance to listen */
     sleep(1);
 
-    conn = s2n_connection_new(S2N_CLIENT);
+    conn   = s2n_connection_new(S2N_CLIENT);
     config = s2n_config_new();
     s2n_config_set_protocol_preferences(config, protocols, 2);
     s2n_config_disable_x509_verification(config);
@@ -61,7 +61,7 @@ int mock_client(int writefd, int readfd, int expect_failure)
             result = 1;
         }
 
-        if (s2n_connection_get_alert(conn) != 40){
+        if (s2n_connection_get_alert(conn) != 40) {
             result = 2;
         }
     } else {
@@ -75,10 +75,10 @@ int mock_client(int writefd, int readfd, int expect_failure)
             s2n_send(conn, buffer, i, &blocked);
         }
 
-        int shutdown_rc= -1;
+        int shutdown_rc = -1;
         do {
             shutdown_rc = s2n_shutdown(conn, &blocked);
-        } while(shutdown_rc != 0);
+        } while (shutdown_rc != 0);
     }
 
     s2n_connection_free(conn);
@@ -101,7 +101,7 @@ int mock_nanoseconds_since_epoch(void *data, uint64_t *nanoseconds)
 
     /* When next called return 31 seconds */
     if (called) {
-        *nanoseconds += (uint64_t) 31 * 1000000000;
+        *nanoseconds += (uint64_t)31 * 1000000000;
     }
 
     called = 1;
@@ -124,14 +124,15 @@ int client_hello_swap_config(struct s2n_connection *conn, void *ctx)
 
     /* Validate SNI extension */
     uint8_t expected_server_name[] = {
-            /* Server names len */
-            0x00, 0x0E,
-            /* Server name type - host name */
-            0x00,
-            /* First server name len */
-            0x00, 0x0B,
-            /* First server name, matches sent_server_name */
-            'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'};
+        /* Server names len */
+        0x00, 0x0E,
+        /* Server name type - host name */
+        0x00,
+        /* First server name len */
+        0x00, 0x0B,
+        /* First server name, matches sent_server_name */
+        'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', 'c', 'o', 'm'
+    };
 
     /* Get SNI extension from client hello */
     uint32_t len = s2n_client_hello_get_extension_length(client_hello, S2N_EXTENSION_SERVER_NAME);
@@ -139,7 +140,7 @@ int client_hello_swap_config(struct s2n_connection *conn, void *ctx)
         return -1;
     }
 
-    uint8_t ser_name[16] = {0};
+    uint8_t ser_name[16] = { 0 };
     if (s2n_client_hello_get_extension_by_id(client_hello, S2N_EXTENSION_SERVER_NAME, ser_name, len) <= 0) {
         return -1;
     }
@@ -207,7 +208,7 @@ int main(int argc, char **argv)
 
     /* Prepare context */
     client_hello_ctx.invoked = 0;
-    client_hello_ctx.config = swap_config;
+    client_hello_ctx.config  = swap_config;
 
     /* Set up the callback to swap config on client hello */
     EXPECT_SUCCESS(s2n_config_set_client_hello_cb(config, client_hello_swap_config, &client_hello_ctx));
@@ -251,8 +252,8 @@ int main(int argc, char **argv)
     EXPECT_STRING_EQUAL(s2n_get_application_protocol(conn), protocols[0]);
 
     for (int i = 1; i < 0xffff; i += 100) {
-        char * ptr = buffer;
-        int size = i;
+        char *ptr = buffer;
+        int size  = i;
 
         do {
             int bytes_read = 0;
@@ -260,7 +261,7 @@ int main(int argc, char **argv)
 
             size -= bytes_read;
             ptr += bytes_read;
-        } while(size);
+        } while (size);
 
         for (int j = 0; j < i; j++) {
             EXPECT_EQUAL(buffer[j], 33);
@@ -282,7 +283,7 @@ int main(int argc, char **argv)
 
     /* Setup ClientHello callback */
     client_hello_ctx.invoked = 0;
-    client_hello_ctx.config = NULL;
+    client_hello_ctx.config  = NULL;
     EXPECT_SUCCESS(s2n_config_set_client_hello_cb(config, client_hello_fail_handshake, &client_hello_ctx));
 
     /* Create a pipe */

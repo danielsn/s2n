@@ -15,10 +15,10 @@
 
 #include "s2n_test.h"
 
-#include <sys/wait.h>
-#include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include <s2n.h>
 
@@ -34,16 +34,16 @@
  * from the pipe.
  */
 
-#define TLS_ALERT              21
-#define TLS_HANDSHAKE          22
-#define TLS_HEARTBEAT          24
+#define TLS_ALERT 21
+#define TLS_HANDSHAKE 22
+#define TLS_HEARTBEAT 24
 
-#define ZERO_TO_THIRTY_ONE  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, \
-                            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+#define ZERO_TO_THIRTY_ONE 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, \
+                           0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
 
 uint8_t zero_to_thirty_one[] = { ZERO_TO_THIRTY_ONE };
 
-uint8_t server_hello_message[] = {  /* SERVER HELLO */
+uint8_t server_hello_message[] = { /* SERVER HELLO */
     0x02,
 
     /* Length */
@@ -68,7 +68,7 @@ uint8_t server_hello_message[] = {  /* SERVER HELLO */
     0x00
 };
 
-uint8_t server_cert[] = {       /* SERVER CERT */
+uint8_t server_cert[] = { /* SERVER CERT */
     0x0B,
 
     /* Length of the handshake message */
@@ -152,16 +152,16 @@ uint8_t server_cert[] = {       /* SERVER CERT */
     0xc0, 0x4b
 };
 
-uint8_t heartbeat_message[] = {     
-    0x01, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 
+uint8_t heartbeat_message[] = {
+    0x01, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
     0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10
 };
 
-uint8_t warning_alert[] = {       /* warning: user cancelled */
+uint8_t warning_alert[] = { /* warning: user cancelled */
     0x02, 0x5a
 };
 
-uint8_t fatal_alert[] = {       /* Fatal: unexpected message */
+uint8_t fatal_alert[] = { /* Fatal: unexpected message */
     0x01, 0x0a
 };
 
@@ -218,9 +218,9 @@ void coalesced_message(int write_fd)
 
 void interleaved_message(int write_fd)
 {
-    int length = sizeof(server_hello_message) / 2;
+    int length               = sizeof(server_hello_message) / 2;
     uint8_t record_header[5] = { TLS_HANDSHAKE, 0x03, 0x03, (length >> 8), length & 0xff };
-    int written = 0;
+    int written              = 0;
 
     /* Write half of the message */
     if (write(write_fd, record_header, 5) != 5) {
@@ -244,7 +244,7 @@ void interleaved_message(int write_fd)
     }
 
     /* Write the rest of the hello message */
-    length = sizeof(server_hello_message) - written;
+    length           = sizeof(server_hello_message) - written;
     record_header[0] = TLS_HANDSHAKE;
     record_header[3] = length >> 8;
     record_header[4] = length & 0xff;
@@ -261,9 +261,9 @@ void interleaved_message(int write_fd)
 
 void interleaved_fragmented_fatal_alert(int write_fd)
 {
-    int length = sizeof(server_hello_message) / 2;
+    int length               = sizeof(server_hello_message) / 2;
     uint8_t record_header[5] = { TLS_HANDSHAKE, 0x03, 0x03, (length >> 8), length & 0xff };
-    int written = 0;
+    int written              = 0;
 
     /* Write half of the message */
     if (write(write_fd, record_header, 5) != 5) {
@@ -287,7 +287,7 @@ void interleaved_fragmented_fatal_alert(int write_fd)
     }
 
     /* Write another quarter of the of the hello message */
-    length = sizeof(server_hello_message) / 4;
+    length           = sizeof(server_hello_message) / 4;
     record_header[0] = TLS_HANDSHAKE;
     record_header[3] = length >> 8;
     record_header[4] = length & 0xff;
@@ -312,7 +312,7 @@ void interleaved_fragmented_fatal_alert(int write_fd)
     }
 
     /* Write the rest of the hello message */
-    length = sizeof(server_hello_message) - written;
+    length           = sizeof(server_hello_message) - written;
     record_header[0] = TLS_HANDSHAKE;
     record_header[3] = length >> 8;
     record_header[4] = length & 0xff;
@@ -329,9 +329,9 @@ void interleaved_fragmented_fatal_alert(int write_fd)
 
 void interleaved_fragmented_warning_alert(int write_fd)
 {
-    int length = sizeof(server_hello_message) / 2;
+    int length               = sizeof(server_hello_message) / 2;
     uint8_t record_header[5] = { TLS_HANDSHAKE, 0x03, 0x03, (length >> 8), length & 0xff };
-    int written = 0;
+    int written              = 0;
 
     /* Write half of the message */
     if (write(write_fd, record_header, 5) != 5) {
@@ -351,7 +351,7 @@ void interleaved_fragmented_warning_alert(int write_fd)
     }
 
     /* Write another quarter of the of the hello message */
-    length = sizeof(server_hello_message) / 4;
+    length           = sizeof(server_hello_message) / 4;
     record_header[0] = TLS_HANDSHAKE;
     record_header[3] = length >> 8;
     record_header[4] = length & 0xff;
@@ -376,7 +376,7 @@ void interleaved_fragmented_warning_alert(int write_fd)
     }
 
     /* Write the rest of the hello message */
-    length = sizeof(server_hello_message) - written;
+    length           = sizeof(server_hello_message) - written;
     record_header[0] = TLS_HANDSHAKE;
     record_header[3] = length >> 8;
     record_header[4] = length & 0xff;

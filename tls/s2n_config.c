@@ -55,12 +55,11 @@ static int wall_clock(void *data, uint64_t *nanoseconds)
     return 0;
 }
 
-static uint8_t default_config_init = 0;
-static uint8_t unsafe_client_testing_config_init = 0;
+static uint8_t default_config_init                     = 0;
+static uint8_t unsafe_client_testing_config_init       = 0;
 static uint8_t unsafe_client_ecdsa_testing_config_init = 0;
-static uint8_t default_client_config_init = 0;
-static uint8_t default_fips_config_init = 0;
-
+static uint8_t default_client_config_init              = 0;
+static uint8_t default_fips_config_init                = 0;
 
 static struct s2n_config s2n_default_config;
 
@@ -76,31 +75,31 @@ static struct s2n_config s2n_default_fips_config;
 static int s2n_config_init(struct s2n_config *config)
 {
     config->cert_and_key_pairs = NULL;
-    config->dhparams = NULL;
+    config->dhparams           = NULL;
     memset(&config->application_protocols, 0, sizeof(config->application_protocols));
-    config->status_request_type = S2N_STATUS_REQUEST_NONE;
-    config->wall_clock = wall_clock;
-    config->monotonic_clock = monotonic_clock;
-    config->verify_host = NULL;
+    config->status_request_type  = S2N_STATUS_REQUEST_NONE;
+    config->wall_clock           = wall_clock;
+    config->monotonic_clock      = monotonic_clock;
+    config->verify_host          = NULL;
     config->data_for_verify_host = NULL;
-    config->client_hello_cb = NULL;
-    config->client_hello_cb_ctx = NULL;
-    config->cache_store = NULL;
-    config->cache_store_data = NULL;
-    config->cache_retrieve = NULL;
-    config->cache_retrieve_data = NULL;
-    config->cache_delete = NULL;
-    config->cache_delete_data = NULL;
-    config->ct_type = S2N_CT_SUPPORT_NONE;
-    config->mfl_code = S2N_TLS_MAX_FRAG_LEN_EXT_NONE;
-    config->accept_mfl = 0;
+    config->client_hello_cb      = NULL;
+    config->client_hello_cb_ctx  = NULL;
+    config->cache_store          = NULL;
+    config->cache_store_data     = NULL;
+    config->cache_retrieve       = NULL;
+    config->cache_retrieve_data  = NULL;
+    config->cache_delete         = NULL;
+    config->cache_delete_data    = NULL;
+    config->ct_type              = S2N_CT_SUPPORT_NONE;
+    config->mfl_code             = S2N_TLS_MAX_FRAG_LEN_EXT_NONE;
+    config->accept_mfl           = 0;
 
     /* By default, only the client will authenticate the Server's Certificate. The Server does not request or
      * authenticate any client certificates. */
-    config->client_cert_auth_type = S2N_CERT_AUTH_NONE;
-    config->check_ocsp = 1;
-    config->disable_x509_validation = 0;
-    config->max_verify_cert_chain_depth = 0;
+    config->client_cert_auth_type           = S2N_CERT_AUTH_NONE;
+    config->check_ocsp                      = 1;
+    config->disable_x509_validation         = 0;
+    config->max_verify_cert_chain_depth     = 0;
     config->max_verify_cert_chain_depth_set = 0;
 
     if (s2n_is_in_fips_mode()) {
@@ -127,13 +126,14 @@ static int s2n_config_cleanup(struct s2n_config *config)
     return 0;
 }
 
-struct s2n_config *s2n_fetch_default_config(void) {
+struct s2n_config *s2n_fetch_default_config(void)
+{
     if (!default_config_init) {
         s2n_config_init(&s2n_default_config);
-        s2n_default_config.cert_and_key_pairs = NULL;
-        s2n_default_config.cipher_preferences = &cipher_preferences_20170210;
+        s2n_default_config.cert_and_key_pairs    = NULL;
+        s2n_default_config.cipher_preferences    = &cipher_preferences_20170210;
         s2n_default_config.client_cert_auth_type = S2N_CERT_AUTH_NONE; /* Do not require the client to provide a Cert to the Server */
-        s2n_default_config.data_for_verify_host = NULL;
+        s2n_default_config.data_for_verify_host  = NULL;
 
         default_config_init = 1;
     }
@@ -158,10 +158,10 @@ struct s2n_config *s2n_fetch_unsafe_client_testing_config(void)
 {
     if (!unsafe_client_testing_config_init) {
         s2n_config_init(&s2n_unsafe_client_testing_config);
-        s2n_unsafe_client_testing_config.cert_and_key_pairs = NULL;
-        s2n_unsafe_client_testing_config.cipher_preferences = &cipher_preferences_20170210;
-        s2n_unsafe_client_testing_config.client_cert_auth_type = S2N_CERT_AUTH_NONE;
-        s2n_unsafe_client_testing_config.check_ocsp = 0;
+        s2n_unsafe_client_testing_config.cert_and_key_pairs      = NULL;
+        s2n_unsafe_client_testing_config.cipher_preferences      = &cipher_preferences_20170210;
+        s2n_unsafe_client_testing_config.client_cert_auth_type   = S2N_CERT_AUTH_NONE;
+        s2n_unsafe_client_testing_config.check_ocsp              = 0;
         s2n_unsafe_client_testing_config.disable_x509_validation = 1;
 
         unsafe_client_testing_config_init = 1;
@@ -174,10 +174,10 @@ struct s2n_config *s2n_fetch_unsafe_client_ecdsa_testing_config(void)
 {
     if (!unsafe_client_ecdsa_testing_config_init) {
         s2n_config_init(&s2n_unsafe_client_ecdsa_testing_config);
-        s2n_unsafe_client_ecdsa_testing_config.cert_and_key_pairs = NULL;
-        s2n_unsafe_client_ecdsa_testing_config.cipher_preferences = &cipher_preferences_test_all_ecdsa;
-        s2n_unsafe_client_ecdsa_testing_config.client_cert_auth_type = S2N_CERT_AUTH_NONE;
-        s2n_unsafe_client_ecdsa_testing_config.check_ocsp = 0;
+        s2n_unsafe_client_ecdsa_testing_config.cert_and_key_pairs      = NULL;
+        s2n_unsafe_client_ecdsa_testing_config.cipher_preferences      = &cipher_preferences_test_all_ecdsa;
+        s2n_unsafe_client_ecdsa_testing_config.client_cert_auth_type   = S2N_CERT_AUTH_NONE;
+        s2n_unsafe_client_ecdsa_testing_config.check_ocsp              = 0;
         s2n_unsafe_client_ecdsa_testing_config.disable_x509_validation = 1;
 
         unsafe_client_ecdsa_testing_config_init = 1;
@@ -190,8 +190,8 @@ struct s2n_config *s2n_fetch_default_client_config(void)
 {
     if (!default_client_config_init) {
         s2n_config_init(&default_client_config);
-        default_client_config.cert_and_key_pairs = NULL;
-        default_client_config.cipher_preferences = &cipher_preferences_20170210;
+        default_client_config.cert_and_key_pairs    = NULL;
+        default_client_config.cipher_preferences    = &cipher_preferences_20170210;
         default_client_config.client_cert_auth_type = S2N_CERT_AUTH_REQUIRED;
 
         default_client_config_init = 1;
@@ -200,7 +200,8 @@ struct s2n_config *s2n_fetch_default_client_config(void)
     return &default_client_config;
 }
 
-void s2n_wipe_static_configs(void) {
+void s2n_wipe_static_configs(void)
+{
     if (default_client_config_init) {
         s2n_config_cleanup(&default_client_config);
         default_client_config_init = 0;
@@ -239,7 +240,7 @@ int s2n_config_free_cert_chain_and_key(struct s2n_config *config)
 {
 
     struct s2n_blob b = {
-        .data = (uint8_t *) config->cert_and_key_pairs,
+        .data = (uint8_t *)config->cert_and_key_pairs,
         .size = sizeof(struct s2n_cert_chain_and_key)
     };
 
@@ -248,7 +249,7 @@ int s2n_config_free_cert_chain_and_key(struct s2n_config *config)
         struct s2n_cert *node = config->cert_and_key_pairs->cert_chain.head;
         while (node) {
             struct s2n_blob n = {
-                .data = (uint8_t *) node,
+                .data = (uint8_t *)node,
                 .size = sizeof(struct s2n_cert)
             };
             /* Free the cert */
@@ -270,7 +271,7 @@ int s2n_config_free_cert_chain_and_key(struct s2n_config *config)
 int s2n_config_free_dhparams(struct s2n_config *config)
 {
     struct s2n_blob b = {
-        .data = (uint8_t *) config->dhparams,
+        .data = (uint8_t *)config->dhparams,
         .size = sizeof(struct s2n_dh_params)
     };
 
@@ -284,7 +285,7 @@ int s2n_config_free_dhparams(struct s2n_config *config)
 
 int s2n_config_free(struct s2n_config *config)
 {
-    struct s2n_blob b = {.data = (uint8_t *) config,.size = sizeof(struct s2n_config) };
+    struct s2n_blob b = {.data = (uint8_t *)config, .size = sizeof(struct s2n_config) };
 
     s2n_config_cleanup(config);
 
@@ -356,7 +357,7 @@ int s2n_config_set_ct_support_level(struct s2n_config *config, s2n_ct_support_le
 int s2n_config_set_verify_host_callback(struct s2n_config *config, s2n_verify_host_fn verify_host_fn, void *data)
 {
     notnull_check(config);
-    config->verify_host = verify_host_fn;
+    config->verify_host          = verify_host_fn;
     config->data_for_verify_host = data;
     return 0;
 }
@@ -376,18 +377,18 @@ int s2n_config_disable_x509_verification(struct s2n_config *config)
     return 0;
 }
 
-int s2n_config_set_max_cert_chain_depth(struct s2n_config *config, uint16_t max_depth) {
+int s2n_config_set_max_cert_chain_depth(struct s2n_config *config, uint16_t max_depth)
+{
     notnull_check(config);
 
     if (max_depth > 0) {
-        config->max_verify_cert_chain_depth = max_depth;
+        config->max_verify_cert_chain_depth     = max_depth;
         config->max_verify_cert_chain_depth_set = 1;
         return 0;
     }
 
     return -1;
 }
-
 
 int s2n_config_set_status_request_type(struct s2n_config *config, s2n_status_request_type type)
 {
@@ -419,7 +420,7 @@ int s2n_config_add_cert_chain_from_stuffer(struct s2n_config *config, struct s2n
     GUARD(s2n_stuffer_growable_alloc(&cert_out_stuffer, 2048));
 
     struct s2n_cert **insert = &config->cert_and_key_pairs->cert_chain.head;
-    uint32_t chain_size = 0;
+    uint32_t chain_size      = 0;
     do {
         struct s2n_cert *new_node;
 
@@ -440,8 +441,8 @@ int s2n_config_add_cert_chain_from_stuffer(struct s2n_config *config, struct s2n
         /* Additional 3 bytes for the length field in the protocol */
         chain_size += new_node->raw.size + 3;
         new_node->next = NULL;
-        *insert = new_node;
-        insert = &new_node->next;
+        *insert        = new_node;
+        insert         = &new_node->next;
     } while (s2n_stuffer_data_available(chain_in_stuffer));
 
     GUARD(s2n_stuffer_free(&cert_out_stuffer));
@@ -500,7 +501,7 @@ int s2n_config_add_cert_chain_and_key(struct s2n_config *config, const char *cer
 
     /* Allocate the memory for the chain and key struct */
     GUARD(s2n_alloc(&mem, sizeof(struct s2n_cert_chain_and_key)));
-    config->cert_and_key_pairs = (struct s2n_cert_chain_and_key *)(void *)mem.data;
+    config->cert_and_key_pairs                  = (struct s2n_cert_chain_and_key *)(void *)mem.data;
     config->cert_and_key_pairs->cert_chain.head = NULL;
 
     memset(&config->cert_and_key_pairs->ocsp_status, 0, sizeof(config->cert_and_key_pairs->ocsp_status));
@@ -530,7 +531,7 @@ int s2n_config_add_cert_chain_and_key(struct s2n_config *config, const char *cer
 int s2n_config_add_dhparams(struct s2n_config *config, const char *dhparams_pem)
 {
     struct s2n_stuffer dhparams_in_stuffer, dhparams_out_stuffer;
-    struct s2n_blob dhparams_blob = {0};
+    struct s2n_blob dhparams_blob = { 0 };
     struct s2n_blob mem;
 
     /* Allocate the memory for the chain and key struct */
@@ -560,7 +561,7 @@ extern int s2n_config_set_wall_clock(struct s2n_config *config, s2n_clock_time_n
 {
     notnull_check(clock_fn);
 
-    config->wall_clock = clock_fn;
+    config->wall_clock    = clock_fn;
     config->sys_clock_ctx = ctx;
 
     return 0;
@@ -570,40 +571,40 @@ extern int s2n_config_set_monotonic_clock(struct s2n_config *config, s2n_clock_t
 {
     notnull_check(clock_fn);
 
-    config->monotonic_clock = clock_fn;
+    config->monotonic_clock     = clock_fn;
     config->monotonic_clock_ctx = ctx;
 
     return 0;
 }
 
 int s2n_config_set_cache_store_callback(struct s2n_config *config,
-                                        int (*cache_store) (void *, uint64_t ttl_in_seconds, const void *key, uint64_t key_size, const void *value, uint64_t value_size),
-                                        void *data)
+    int (*cache_store)(void *, uint64_t ttl_in_seconds, const void *key, uint64_t key_size, const void *value, uint64_t value_size),
+    void *data)
 {
     notnull_check(cache_store);
 
-    config->cache_store = cache_store;
+    config->cache_store      = cache_store;
     config->cache_store_data = data;
 
     return 0;
 }
 
-int s2n_config_set_cache_retrieve_callback(struct s2n_config *config, int (*cache_retrieve) (void *, const void *key, uint64_t key_size, void *value, uint64_t * value_size),
-                                           void *data)
+int s2n_config_set_cache_retrieve_callback(struct s2n_config *config, int (*cache_retrieve)(void *, const void *key, uint64_t key_size, void *value, uint64_t *value_size),
+    void *data)
 {
     notnull_check(cache_retrieve);
 
-    config->cache_retrieve = cache_retrieve;
+    config->cache_retrieve      = cache_retrieve;
     config->cache_retrieve_data = data;
 
     return 0;
 }
 
-int s2n_config_set_cache_delete_callback(struct s2n_config *config, int (*cache_delete) (void *, const void *key, uint64_t key_size), void *data)
+int s2n_config_set_cache_delete_callback(struct s2n_config *config, int (*cache_delete)(void *, const void *key, uint64_t key_size), void *data)
 {
     notnull_check(cache_delete);
 
-    config->cache_delete = cache_delete;
+    config->cache_delete      = cache_delete;
     config->cache_delete_data = data;
 
     return 0;
@@ -614,26 +615,24 @@ int s2n_config_set_extension_data(struct s2n_config *config, s2n_tls_extension_t
     notnull_check(config);
 
     switch (type) {
-        case S2N_EXTENSION_CERTIFICATE_TRANSPARENCY:
-            {
-                GUARD(s2n_free(&config->cert_and_key_pairs->sct_list));
+    case S2N_EXTENSION_CERTIFICATE_TRANSPARENCY: {
+        GUARD(s2n_free(&config->cert_and_key_pairs->sct_list));
 
-                if (data && length) {
-                    GUARD(s2n_alloc(&config->cert_and_key_pairs->sct_list, length));
-                    memcpy_check(config->cert_and_key_pairs->sct_list.data, data, length);
-                }
-            } break;
-        case S2N_EXTENSION_OCSP_STAPLING:
-            {
-                GUARD(s2n_free(&config->cert_and_key_pairs->ocsp_status));
+        if (data && length) {
+            GUARD(s2n_alloc(&config->cert_and_key_pairs->sct_list, length));
+            memcpy_check(config->cert_and_key_pairs->sct_list.data, data, length);
+        }
+    } break;
+    case S2N_EXTENSION_OCSP_STAPLING: {
+        GUARD(s2n_free(&config->cert_and_key_pairs->ocsp_status));
 
-                if (data && length) {
-                    GUARD(s2n_alloc(&config->cert_and_key_pairs->ocsp_status, length));
-                    memcpy_check(config->cert_and_key_pairs->ocsp_status.data, data, length);
-                }
-            } break;
-        default:
-            S2N_ERROR(S2N_ERR_UNRECOGNIZED_EXTENSION);
+        if (data && length) {
+            GUARD(s2n_alloc(&config->cert_and_key_pairs->ocsp_status, length));
+            memcpy_check(config->cert_and_key_pairs->ocsp_status.data, data, length);
+        }
+    } break;
+    default:
+        S2N_ERROR(S2N_ERR_UNRECOGNIZED_EXTENSION);
     }
 
     return 0;
@@ -641,7 +640,7 @@ int s2n_config_set_extension_data(struct s2n_config *config, s2n_tls_extension_t
 
 int s2n_config_set_client_hello_cb(struct s2n_config *config, s2n_client_hello_fn client_hello_cb, void *ctx)
 {
-    config->client_hello_cb = client_hello_cb;
+    config->client_hello_cb     = client_hello_cb;
     config->client_hello_cb_ctx = ctx;
 
     return 0;
@@ -674,6 +673,6 @@ int s2n_config_get_cert_type(struct s2n_config *config, s2n_cert_type *cert_type
     notnull_check(config->cert_and_key_pairs->cert_chain.head);
 
     *cert_type = config->cert_and_key_pairs->cert_chain.head->cert_type;
-    
+
     return 0;
 }

@@ -18,15 +18,15 @@
 
 #include "error/s2n_errno.h"
 
-#include "tls/s2n_tls_parameters.h"
+#include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_tls.h"
-#include "tls/s2n_cipher_suites.h"
+#include "tls/s2n_tls_parameters.h"
 
 #include "stuffer/s2n_stuffer.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_safety.h"
 
 static int s2n_recv_server_alpn(struct s2n_connection *conn, struct s2n_stuffer *extension);
 static int s2n_recv_server_status_request(struct s2n_connection *conn, struct s2n_stuffer *extension);
@@ -69,7 +69,7 @@ int s2n_server_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *
      * is equivalent to allowing only the uncompressed point format. Let's send the
      * extension in case clients(Openssl 1.0.0) don't honor the implied behavior.
      */
-    if (conn->secure.cipher_suite->key_exchange_alg->flags & S2N_KEY_EXCHANGE_ECC)  {
+    if (conn->secure.cipher_suite->key_exchange_alg->flags & S2N_KEY_EXCHANGE_ECC) {
         GUARD(s2n_stuffer_write_uint16(out, TLS_EXTENSION_EC_POINT_FORMATS));
         /* Total extension length */
         GUARD(s2n_stuffer_write_uint16(out, 2));
@@ -96,7 +96,7 @@ int s2n_server_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *
         GUARD(s2n_stuffer_write_uint16(out, application_protocol_len + 3));
         GUARD(s2n_stuffer_write_uint16(out, application_protocol_len + 1));
         GUARD(s2n_stuffer_write_uint8(out, application_protocol_len));
-        GUARD(s2n_stuffer_write_bytes(out, (uint8_t *) conn->application_protocol, application_protocol_len));
+        GUARD(s2n_stuffer_write_bytes(out, (uint8_t *)conn->application_protocol, application_protocol_len));
     }
 
     /* Write OCSP extension */
@@ -110,7 +110,7 @@ int s2n_server_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *
         GUARD(s2n_stuffer_write_uint16(out, TLS_EXTENSION_SCT_LIST));
         GUARD(s2n_stuffer_write_uint16(out, conn->config->cert_and_key_pairs->sct_list.size));
         GUARD(s2n_stuffer_write_bytes(out, conn->config->cert_and_key_pairs->sct_list.data,
-                                      conn->config->cert_and_key_pairs->sct_list.size));
+            conn->config->cert_and_key_pairs->sct_list.size));
     }
 
     if (conn->mfl_code) {
@@ -194,7 +194,7 @@ int s2n_recv_server_status_request(struct s2n_connection *conn, struct s2n_stuff
 
 int s2n_recv_server_sct_list(struct s2n_connection *conn, struct s2n_stuffer *extension)
 {
-    struct s2n_blob sct_list = { .data = NULL, .size = 0 };
+    struct s2n_blob sct_list = {.data = NULL, .size = 0 };
 
     sct_list.size = s2n_stuffer_data_available(extension);
     sct_list.data = s2n_stuffer_raw_read(extension, sct_list.size);

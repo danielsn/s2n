@@ -18,18 +18,18 @@
 
 #include "error/s2n_errno.h"
 
+#include "tls/s2n_client_extensions.h"
+#include "tls/s2n_connection.h"
 #include "tls/s2n_signature_algorithms.h"
 #include "tls/s2n_tls_digest_preferences.h"
 #include "tls/s2n_tls_parameters.h"
-#include "tls/s2n_connection.h"
-#include "tls/s2n_client_extensions.h"
 
 #include "stuffer/s2n_stuffer.h"
 
 #include "tls/s2n_tls.h"
-#include "utils/s2n_safety.h"
 #include "utils/s2n_blob.h"
 #include "utils/s2n_map.h"
+#include "utils/s2n_safety.h"
 
 static int s2n_recv_client_server_name(struct s2n_connection *conn, struct s2n_stuffer *extension);
 static int s2n_recv_client_signature_algorithms(struct s2n_connection *conn, struct s2n_stuffer *extension);
@@ -49,10 +49,10 @@ static int s2n_send_client_signature_algorithms_extension(struct s2n_connection 
     /* Each hash-signature-alg pair is two bytes, and there's another two bytes for
      * the extension length field.
      */
-    uint16_t preferred_hashes_len = sizeof(s2n_preferred_hashes) / sizeof(s2n_preferred_hashes[0]);
-    uint16_t num_signature_algs = sizeof(s2n_preferred_signature_algorithms) / sizeof(s2n_preferred_signature_algorithms[0]);
+    uint16_t preferred_hashes_len       = sizeof(s2n_preferred_hashes) / sizeof(s2n_preferred_hashes[0]);
+    uint16_t num_signature_algs         = sizeof(s2n_preferred_signature_algorithms) / sizeof(s2n_preferred_signature_algorithms[0]);
     uint16_t preferred_hash_sigalg_size = preferred_hashes_len * num_signature_algs * 2;
-    uint16_t extension_len_field_size = 2;
+    uint16_t extension_len_field_size   = 2;
 
     GUARD(s2n_stuffer_write_uint16(out, extension_len_field_size + preferred_hash_sigalg_size));
     GUARD(s2n_send_supported_signature_algorithms(out));
@@ -62,7 +62,7 @@ static int s2n_send_client_signature_algorithms_extension(struct s2n_connection 
 
 int s2n_client_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *out)
 {
-    uint16_t total_size = 0;
+    uint16_t total_size         = 0;
     uint16_t num_signature_algs = sizeof(s2n_preferred_signature_algorithms) / sizeof(s2n_preferred_signature_algorithms[0]);
 
     /* Signature algorithms */
@@ -71,8 +71,8 @@ int s2n_client_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *
     }
 
     uint16_t application_protocols_len = conn->config->application_protocols.size;
-    uint16_t server_name_len = strlen(conn->server_name);
-    uint16_t mfl_code_len = sizeof(conn->config->mfl_code);
+    uint16_t server_name_len           = strlen(conn->server_name);
+    uint16_t mfl_code_len              = sizeof(conn->config->mfl_code);
 
     if (server_name_len) {
         total_size += 9 + server_name_len;
@@ -112,7 +112,7 @@ int s2n_client_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *
         GUARD(s2n_stuffer_write_uint8(out, 0));
 
         struct s2n_blob server_name;
-        server_name.data = (uint8_t *) conn->server_name;
+        server_name.data = (uint8_t *)conn->server_name;
         server_name.size = server_name_len;
         GUARD(s2n_stuffer_write_uint16(out, server_name_len));
         GUARD(s2n_stuffer_write(out, &server_name));
@@ -131,7 +131,7 @@ int s2n_client_extensions_send(struct s2n_connection *conn, struct s2n_stuffer *
         eq_check(conn->config->status_request_type, S2N_STATUS_REQUEST_OCSP);
         GUARD(s2n_stuffer_write_uint16(out, TLS_EXTENSION_STATUS_REQUEST));
         GUARD(s2n_stuffer_write_uint16(out, 5));
-        GUARD(s2n_stuffer_write_uint8(out, (uint8_t) conn->config->status_request_type));
+        GUARD(s2n_stuffer_write_uint8(out, (uint8_t)conn->config->status_request_type));
         GUARD(s2n_stuffer_write_uint16(out, 0));
         GUARD(s2n_stuffer_write_uint16(out, 0));
     }
@@ -326,11 +326,11 @@ static int s2n_recv_client_status_request(struct s2n_connection *conn, struct s2
     }
     uint8_t type;
     GUARD(s2n_stuffer_read_uint8(extension, &type));
-    if (type != (uint8_t) S2N_STATUS_REQUEST_OCSP) {
+    if (type != (uint8_t)S2N_STATUS_REQUEST_OCSP) {
         /* We only support OCSP (type 1), ignore the extension */
         return 0;
     }
-    conn->status_type = (s2n_status_request_type) type;
+    conn->status_type = (s2n_status_request_type)type;
     return 0;
 }
 
@@ -383,7 +383,6 @@ static int s2n_recv_client_sct_list(struct s2n_connection *conn, struct s2n_stuf
     return 0;
 }
 
-
 static int s2n_recv_client_max_frag_len(struct s2n_connection *conn, struct s2n_stuffer *extension)
 {
     if (!conn->config->accept_mfl) {
@@ -396,7 +395,7 @@ static int s2n_recv_client_max_frag_len(struct s2n_connection *conn, struct s2n_
         return 0;
     }
 
-    conn->mfl_code = mfl_code;
+    conn->mfl_code                     = mfl_code;
     conn->max_outgoing_fragment_length = mfl_code_to_length[mfl_code];
     return 0;
 }

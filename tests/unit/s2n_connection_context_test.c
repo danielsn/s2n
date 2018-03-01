@@ -14,8 +14,8 @@
  */
 
 #include "s2n_test.h"
-#include <stdlib.h>
 #include <s2n.h>
+#include <stdlib.h>
 
 int main(int argc, char **argv)
 {

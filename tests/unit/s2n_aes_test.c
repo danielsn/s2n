@@ -15,31 +15,31 @@
 
 #include "s2n_test.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <s2n.h>
 
 #include "testlib/s2n_testlib.h"
 
-#include "tls/s2n_cipher_suites.h"
-#include "stuffer/s2n_stuffer.h"
 #include "crypto/s2n_cipher.h"
-#include "utils/s2n_random.h"
 #include "crypto/s2n_hmac.h"
-#include "tls/s2n_record.h"
+#include "stuffer/s2n_stuffer.h"
+#include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_prf.h"
+#include "tls/s2n_record.h"
+#include "utils/s2n_random.h"
 
 int main(int argc, char **argv)
 {
     struct s2n_connection *conn;
-    uint8_t mac_key[] = "sample mac key";
-    uint8_t aes128_key[] = "123456789012345";
-    uint8_t aes256_key[] = "1234567890123456789012345678901";
-    struct s2n_blob aes128 = {.data = aes128_key,.size = sizeof(aes128_key) };
-    struct s2n_blob aes256 = {.data = aes256_key,.size = sizeof(aes256_key) };
+    uint8_t mac_key[]      = "sample mac key";
+    uint8_t aes128_key[]   = "123456789012345";
+    uint8_t aes256_key[]   = "1234567890123456789012345678901";
+    struct s2n_blob aes128 = {.data = aes128_key, .size = sizeof(aes128_key) };
+    struct s2n_blob aes256 = {.data = aes256_key, .size = sizeof(aes256_key) };
     uint8_t random_data[S2N_DEFAULT_FRAGMENT_LENGTH + 1];
-    struct s2n_blob r = {.data = random_data, .size = sizeof(random_data)};
+    struct s2n_blob r = {.data = random_data, .size = sizeof(random_data) };
 
     BEGIN_TEST();
 
@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 
     int max_aligned_fragment = S2N_DEFAULT_FRAGMENT_LENGTH - (S2N_DEFAULT_FRAGMENT_LENGTH % 16);
     for (int i = 0; i <= max_aligned_fragment + 1; i++) {
-        struct s2n_blob in = {.data = random_data,.size = i };
+        struct s2n_blob in = {.data = random_data, .size = i };
         int bytes_written;
 
         EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->out));
@@ -93,9 +93,9 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->in));
         EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->header_in));
         EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->header_in, 5))
-            EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->in, s2n_stuffer_data_available(&conn->out)))
+        EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->in, s2n_stuffer_data_available(&conn->out)))
 
-            /* Let's decrypt it */
+        /* Let's decrypt it */
         uint8_t content_type;
         uint16_t fragment_length;
         EXPECT_SUCCESS(s2n_record_header_parse(conn, &content_type, &fragment_length));
@@ -113,8 +113,8 @@ int main(int argc, char **argv)
 
     /* test the AES256 cipher with a SHA1 hash */
     EXPECT_NOT_NULL(conn = s2n_connection_new(S2N_SERVER));
-    conn->server = &conn->secure;
-    conn->client = &conn->secure;
+    conn->server                          = &conn->secure;
+    conn->client                          = &conn->secure;
     conn->secure.cipher_suite->record_alg = &s2n_record_alg_aes256_sha;
     EXPECT_SUCCESS(conn->secure.cipher_suite->record_alg->cipher->init(&conn->secure.server_key));
     EXPECT_SUCCESS(conn->secure.cipher_suite->record_alg->cipher->init(&conn->secure.client_key));
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 
     max_aligned_fragment = S2N_DEFAULT_FRAGMENT_LENGTH - (S2N_DEFAULT_FRAGMENT_LENGTH % 16);
     for (int i = 0; i <= max_aligned_fragment + 1; i++) {
-        struct s2n_blob in = {.data = random_data,.size = i };
+        struct s2n_blob in = {.data = random_data, .size = i };
         int bytes_written;
 
         EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->out));
@@ -157,9 +157,9 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->in));
         EXPECT_SUCCESS(s2n_stuffer_wipe(&conn->header_in));
         EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->header_in, 5))
-            EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->in, s2n_stuffer_data_available(&conn->out)))
+        EXPECT_SUCCESS(s2n_stuffer_copy(&conn->out, &conn->in, s2n_stuffer_data_available(&conn->out)))
 
-            /* Let's decrypt it */
+        /* Let's decrypt it */
         uint8_t content_type;
         uint16_t fragment_length;
         EXPECT_SUCCESS(s2n_record_header_parse(conn, &content_type, &fragment_length));

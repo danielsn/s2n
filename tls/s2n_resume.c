@@ -15,8 +15,8 @@
 
 #include "stuffer/s2n_stuffer.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_safety.h"
 
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
@@ -27,7 +27,7 @@ int s2n_allowed_to_cache_connection(struct s2n_connection *conn)
     s2n_cert_auth_type client_cert_auth_type;
     GUARD(s2n_connection_get_client_auth_type(conn, &client_cert_auth_type));
 
-    if(client_cert_auth_type != S2N_CERT_AUTH_NONE) {
+    if (client_cert_auth_type != S2N_CERT_AUTH_NONE) {
         /* We're unable to cache connections with a Client Cert since we currently don't serialize the Client Cert,
          * which means that callers won't have access to the Client's Cert if the connection is resumed. */
         return 0;
@@ -105,7 +105,7 @@ static int s2n_deserialize_resumption_state(struct s2n_connection *conn, struct 
 int s2n_resume_from_cache(struct s2n_connection *conn)
 {
     uint8_t data[S2N_STATE_SIZE_IN_BYTES] = { 0 };
-    struct s2n_blob entry = {.data = data,.size = S2N_STATE_SIZE_IN_BYTES };
+    struct s2n_blob entry = {.data = data, .size = S2N_STATE_SIZE_IN_BYTES };
     struct s2n_stuffer from;
     uint64_t size;
 
@@ -134,7 +134,7 @@ int s2n_resume_from_cache(struct s2n_connection *conn)
 int s2n_store_to_cache(struct s2n_connection *conn)
 {
     uint8_t data[S2N_STATE_SIZE_IN_BYTES] = { 0 };
-    struct s2n_blob entry = {.data = data,.size = S2N_STATE_SIZE_IN_BYTES };
+    struct s2n_blob entry = {.data = data, .size = S2N_STATE_SIZE_IN_BYTES };
     struct s2n_stuffer to;
 
     if (!s2n_allowed_to_cache_connection(conn)) {

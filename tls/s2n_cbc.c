@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
-#include <sys/param.h>
 #include <stdint.h>
+#include <sys/param.h>
 
 #include "error/s2n_errno.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_mem.h"
+#include "utils/s2n_safety.h"
 
 #include "crypto/s2n_hmac.h"
 
@@ -50,9 +50,9 @@ int s2n_verify_cbc(struct s2n_connection *conn, struct s2n_hmac_state *hmac, str
     /* Set up MAC copy workspace */
     struct s2n_hmac_state *copy = &conn->client->record_mac_copy_workspace;
     if (conn->mode == S2N_CLIENT) {
-       copy = &conn->server->record_mac_copy_workspace;
+        copy = &conn->server->record_mac_copy_workspace;
     }
-    
+
     uint8_t mac_digest_size;
     GUARD(s2n_hmac_digest_size(hmac->alg, &mac_digest_size));
 

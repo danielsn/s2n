@@ -13,25 +13,26 @@
  * permissions and limitations under the License.
  */
 
-#include <string.h>
 #include "error/s2n_errno.h"
+#include <string.h>
 
 #include "stuffer/s2n_stuffer.h"
 
 #include "utils/s2n_safety.h"
 
-#define S2N_PEM_LINE         "-----"
+#define S2N_PEM_LINE "-----"
 #define S2N_PEM_BEGIN_TOKEN (S2N_PEM_LINE "BEGIN ")
-#define S2N_PEM_END_TOKEN   (S2N_PEM_LINE "END ")
+#define S2N_PEM_END_TOKEN (S2N_PEM_LINE "END ")
 
-#define S2N_PEM_PKCS1_RSA_PRIVATE_KEY       "RSA PRIVATE KEY"
-#define S2N_PEM_PKCS1_EC_PRIVATE_KEY        "EC PRIVATE KEY"
-#define S2N_PEM_PKCS8_PRIVATE_KEY           "PRIVATE KEY"
-#define S2N_PEM_DH_PARAMETERS               "DH PARAMETERS"
-#define S2N_PEM_EC_PARAMETERS               "EC PARAMETERS"
-#define S2N_PEM_CERTIFICATE                 "CERTIFICATE"
+#define S2N_PEM_PKCS1_RSA_PRIVATE_KEY "RSA PRIVATE KEY"
+#define S2N_PEM_PKCS1_EC_PRIVATE_KEY "EC PRIVATE KEY"
+#define S2N_PEM_PKCS8_PRIVATE_KEY "PRIVATE KEY"
+#define S2N_PEM_DH_PARAMETERS "DH PARAMETERS"
+#define S2N_PEM_EC_PARAMETERS "EC PARAMETERS"
+#define S2N_PEM_CERTIFICATE "CERTIFICATE"
 
-static int s2n_stuffer_pem_read_encapsulation_line(struct s2n_stuffer *pem, const char* encap_marker, const char *keyword) {
+static int s2n_stuffer_pem_read_encapsulation_line(struct s2n_stuffer *pem, const char *encap_marker, const char *keyword)
+{
     /* Skip any number of Chars until "-----BEGIN " or "-----END " is reached */
     GUARD(s2n_stuffer_skip_read_until(pem, encap_marker));
 
@@ -58,8 +59,8 @@ static int s2n_stuffer_pem_read_end(struct s2n_stuffer *pem, const char *keyword
 
 static int s2n_stuffer_pem_read_contents(struct s2n_stuffer *pem, struct s2n_stuffer *asn1)
 {
-    uint8_t base64_buf[64] = { 0 };
-    struct s2n_blob base64__blob = { .data = base64_buf, .size = sizeof(base64_buf) };
+    uint8_t base64_buf[64]       = { 0 };
+    struct s2n_blob base64__blob = {.data = base64_buf, .size = sizeof(base64_buf) };
     struct s2n_stuffer base64_stuffer;
     GUARD(s2n_stuffer_init(&base64_stuffer, &base64__blob));
 
@@ -71,10 +72,10 @@ static int s2n_stuffer_pem_read_contents(struct s2n_stuffer *pem, struct s2n_stu
             break;
         } else {
             /* Else, move read pointer forward by 1 byte since we will be consuming it. */
-             GUARD(s2n_stuffer_skip_read(pem, 1));
+            GUARD(s2n_stuffer_skip_read(pem, 1));
         }
 
-         /* Skip non-base64 characters */
+        /* Skip non-base64 characters */
         if (!s2n_is_base64_char(c)) {
             continue;
         }
@@ -86,8 +87,7 @@ static int s2n_stuffer_pem_read_contents(struct s2n_stuffer *pem, struct s2n_stu
         }
 
         /* Copy next char to base64_stuffer */
-        GUARD(s2n_stuffer_write_bytes(&base64_stuffer, (uint8_t *) &c, 1));
-
+        GUARD(s2n_stuffer_write_bytes(&base64_stuffer, (uint8_t *)&c, 1));
     };
 
     /* Flush any remaining bytes to asn1 */
@@ -105,14 +105,15 @@ static int s2n_stuffer_data_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer
     return 0;
 }
 
-int s2n_stuffer_private_key_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer *asn1) {
+int s2n_stuffer_private_key_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer *asn1)
+{
     int rc;
-   
+
     rc = s2n_stuffer_data_from_pem(pem, asn1, S2N_PEM_PKCS1_RSA_PRIVATE_KEY);
     if (!rc) {
         return rc;
-    } 
-    
+    }
+
     s2n_stuffer_reread(pem);
     s2n_stuffer_reread(asn1);
 
@@ -126,12 +127,12 @@ int s2n_stuffer_private_key_from_pem(struct s2n_stuffer *pem, struct s2n_stuffer
         s2n_stuffer_reread(pem);
     }
     s2n_stuffer_wipe(asn1);
-    
+
     rc = s2n_stuffer_data_from_pem(pem, asn1, S2N_PEM_PKCS1_EC_PRIVATE_KEY);
     if (!rc) {
         return rc;
     }
-    
+
     /* If it does not match either format, try PKCS#8 */
     s2n_stuffer_reread(pem);
     s2n_stuffer_reread(asn1);

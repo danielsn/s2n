@@ -17,25 +17,24 @@
 
 #include "testlib/s2n_testlib.h"
 
+#include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <stdint.h>
-#include <fcntl.h>
-#include <errno.h>
 
 #include <s2n.h>
 
-#include "tls/s2n_tls.h"
-#include "tls/s2n_connection.h"
 #include "tls/s2n_client_hello.h"
+#include "tls/s2n_connection.h"
 #include "tls/s2n_handshake.h"
+#include "tls/s2n_tls.h"
 #include "tls/s2n_tls_parameters.h"
 
 #include "utils/s2n_safety.h"
 
-
-#define ZERO_TO_THIRTY_ONE  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, \
-                            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
+#define ZERO_TO_THIRTY_ONE 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, \
+                           0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F
 
 int main(int argc, char **argv)
 {
@@ -55,8 +54,8 @@ int main(int argc, char **argv)
         s2n_blocked_status server_blocked;
         int server_to_client[2];
         int client_to_server[2];
-        uint8_t* sent_client_hello;
-        uint8_t* expected_client_hello;
+        uint8_t *sent_client_hello;
+        uint8_t *expected_client_hello;
 
         uint8_t client_extensions[] = {
             /* Extension type TLS_EXTENSION_SERVER_NAME */
@@ -85,7 +84,7 @@ int main(int argc, char **argv)
         };
         int server_name_extension_len = sizeof(server_name_extension);
 
-        int client_extensions_len = sizeof(client_extensions);
+        int client_extensions_len     = sizeof(client_extensions);
         uint8_t client_hello_prefix[] = {
             /* Protocol version TLS 1.2 */
             0x03, 0x03,
@@ -107,14 +106,14 @@ int main(int argc, char **argv)
             (client_extensions_len >> 8) & 0xff, (client_extensions_len & 0xff),
         };
         int client_hello_prefix_len = sizeof(client_hello_prefix);
-        int sent_client_hello_len = client_hello_prefix_len + client_extensions_len;
-        uint8_t message_header[] = {
+        int sent_client_hello_len   = client_hello_prefix_len + client_extensions_len;
+        uint8_t message_header[]    = {
             /* Handshake message type CLIENT HELLO */
             0x01,
             /* Body len */
             (sent_client_hello_len >> 16) & 0xff, (sent_client_hello_len >> 8) & 0xff, (sent_client_hello_len & 0xff),
         };
-        int message_len = sizeof(message_header) + sent_client_hello_len;
+        int message_len         = sizeof(message_header) + sent_client_hello_len;
         uint8_t record_header[] = {
             /* Record type HANDSHAKE */
             0x16,
@@ -175,14 +174,14 @@ int main(int argc, char **argv)
         /* Verify s2n_connection_get_client_hello returns the handle to the s2n_client_hello on the connection */
         EXPECT_EQUAL(client_hello, &server_conn->client_hello);
 
-        uint8_t* collected_client_hello = client_hello->raw_message.blob.data;
+        uint8_t *collected_client_hello     = client_hello->raw_message.blob.data;
         uint16_t collected_client_hello_len = client_hello->raw_message.blob.size;
 
         /* Verify collected client hello message length */
         EXPECT_EQUAL(collected_client_hello_len, sent_client_hello_len);
 
         /* Verify the collected client hello has client random zero-ed out */
-        uint8_t client_random_offset = S2N_TLS_PROTOCOL_VERSION_LEN;
+        uint8_t client_random_offset                            = S2N_TLS_PROTOCOL_VERSION_LEN;
         uint8_t expected_client_random[S2N_TLS_RANDOM_DATA_LEN] = { 0 };
         EXPECT_SUCCESS(memcmp(collected_client_hello + client_random_offset, expected_client_random, S2N_TLS_RANDOM_DATA_LEN));
 
@@ -195,7 +194,7 @@ int main(int argc, char **argv)
         /* Verify s2n_client_hello_get_raw_message_length correct */
         EXPECT_EQUAL(s2n_client_hello_get_raw_message_length(client_hello), sent_client_hello_len);
 
-        uint8_t* raw_ch_out;
+        uint8_t *raw_ch_out;
 
         /* Verify s2n_client_hello_get_raw_message retrieves the full message when its len <= max_len */
         EXPECT_TRUE(collected_client_hello_len < S2N_LARGE_RECORD_LENGTH);
@@ -226,7 +225,7 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(s2n_client_hello_get_cipher_suites_length(client_hello), sizeof(expected_cs));
 
         /* Verify s2n_client_hello_get_cipher_suites correct */
-        uint8_t* cs_out;
+        uint8_t *cs_out;
 
         /* Verify s2n_client_hello_get_cipher_suites retrieves the full cipher_suites when its len <= max_len */
         EXPECT_TRUE(client_hello->cipher_suites.size < S2N_LARGE_RECORD_LENGTH);
@@ -256,7 +255,7 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(s2n_client_hello_get_extensions_length(client_hello), client_extensions_len);
 
         /* Verify s2n_client_hello_get_extensions correct */
-        uint8_t* extensions_out;
+        uint8_t *extensions_out;
 
         /* Verify s2n_client_hello_get_extensions retrieves the full cipher_suites when its len <= max_len */
         EXPECT_TRUE(client_hello->extensions.size < S2N_LARGE_RECORD_LENGTH);
@@ -304,7 +303,7 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(errno, EAGAIN);
         EXPECT_EQUAL(server_conn->close_notify_queued, 1);
 
-         /* Wipe connection */
+        /* Wipe connection */
         EXPECT_SUCCESS(s2n_connection_wipe(server_conn));
 
         /* Verify connection_wipe resized the s2n_client_hello.raw_message stuffer */
@@ -341,7 +340,7 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_config_add_cert_chain_and_key(server_config, cert_chain, private_key));
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, server_config));
 
-       /* Re-send the client hello message */
+        /* Re-send the client hello message */
         EXPECT_EQUAL(write(client_to_server[1], record_header, sizeof(record_header)), sizeof(record_header));
         EXPECT_EQUAL(write(client_to_server[1], message_header, sizeof(message_header)), sizeof(message_header));
         EXPECT_EQUAL(write(client_to_server[1], sent_client_hello, sent_client_hello_len), sent_client_hello_len);
@@ -352,7 +351,7 @@ int main(int argc, char **argv)
         EXPECT_EQUAL(server_conn->handshake.handshake_type, NEGOTIATED | FULL_HANDSHAKE);
 
         /* Verify the collected client hello on the reused connection matches the expected client hello */
-        client_hello = s2n_connection_get_client_hello(server_conn);
+        client_hello           = s2n_connection_get_client_hello(server_conn);
         collected_client_hello = client_hello->raw_message.blob.data;
         EXPECT_SUCCESS(memcmp(collected_client_hello, expected_client_hello, sent_client_hello_len));
 
@@ -379,4 +378,3 @@ int main(int argc, char **argv)
     END_TEST();
     return 0;
 }
-

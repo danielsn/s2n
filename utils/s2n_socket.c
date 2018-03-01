@@ -15,26 +15,26 @@
 
 #include <tls/s2n_connection.h>
 
-#include <utils/s2n_socket.h>
 #include <utils/s2n_safety.h>
+#include <utils/s2n_socket.h>
 
-#include <netinet/tcp.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #if TCP_CORK
-    #define S2N_CORK        TCP_CORK
-    #define S2N_CORK_ON     1
-    #define S2N_CORK_OFF    0
+#define S2N_CORK TCP_CORK
+#define S2N_CORK_ON 1
+#define S2N_CORK_OFF 0
 #elif TCP_NOPUSH
-    #define S2N_CORK        TCP_NOPUSH
-    #define S2N_CORK_ON     1
-    #define S2N_CORK_OFF    0
+#define S2N_CORK TCP_NOPUSH
+#define S2N_CORK_ON 1
+#define S2N_CORK_OFF 0
 #elif TCP_NODELAY
-    #define S2N_CORK        TCP_NODELAY
-    #define S2N_CORK_ON     0
-    #define S2N_CORK_OFF    1
+#define S2N_CORK TCP_NODELAY
+#define S2N_CORK_ON 0
+#define S2N_CORK_OFF 1
 #endif
 
 int s2n_socket_write_snapshot(struct s2n_connection *conn)
@@ -42,7 +42,7 @@ int s2n_socket_write_snapshot(struct s2n_connection *conn)
 #ifdef S2N_CORK
     socklen_t corklen = sizeof(int);
 
-    struct s2n_socket_write_io_context *w_io_ctx = (struct s2n_socket_write_io_context *) conn->send_io_context;
+    struct s2n_socket_write_io_context *w_io_ctx = (struct s2n_socket_write_io_context *)conn->send_io_context;
     notnull_check(w_io_ctx);
 
     getsockopt(w_io_ctx->fd, IPPROTO_TCP, S2N_CORK, &w_io_ctx->original_cork_val, &corklen);
@@ -53,13 +53,12 @@ int s2n_socket_write_snapshot(struct s2n_connection *conn)
     return 0;
 }
 
-
 int s2n_socket_read_snapshot(struct s2n_connection *conn)
 {
 #ifdef SO_RCVLOWAT
     socklen_t watlen = sizeof(int);
-    
-    struct s2n_socket_read_io_context *r_io_ctx = (struct s2n_socket_read_io_context *) conn->recv_io_context;
+
+    struct s2n_socket_read_io_context *r_io_ctx = (struct s2n_socket_read_io_context *)conn->recv_io_context;
     notnull_check(r_io_ctx);
 
     getsockopt(r_io_ctx->fd, IPPROTO_TCP, SO_RCVLOWAT, &r_io_ctx->original_rcvlowat_val, &watlen);
@@ -73,7 +72,7 @@ int s2n_socket_read_snapshot(struct s2n_connection *conn)
 int s2n_socket_write_restore(struct s2n_connection *conn)
 {
 #ifdef S2N_CORK
-    struct s2n_socket_write_io_context *w_io_ctx = (struct s2n_socket_write_io_context *) conn->send_io_context;
+    struct s2n_socket_write_io_context *w_io_ctx = (struct s2n_socket_write_io_context *)conn->send_io_context;
     notnull_check(w_io_ctx);
 
     if (!w_io_ctx->original_cork_is_set) {
@@ -89,7 +88,7 @@ int s2n_socket_write_restore(struct s2n_connection *conn)
 int s2n_socket_read_restore(struct s2n_connection *conn)
 {
 #ifdef SO_RCVLOWAT
-    struct s2n_socket_read_io_context *r_io_ctx = (struct s2n_socket_read_io_context *) conn->recv_io_context;
+    struct s2n_socket_read_io_context *r_io_ctx = (struct s2n_socket_read_io_context *)conn->recv_io_context;
     notnull_check(r_io_ctx);
 
     if (!r_io_ctx->original_rcvlowat_is_set) {
@@ -109,7 +108,7 @@ int s2n_socket_was_corked(struct s2n_connection *conn)
         return 0;
     }
 
-    struct s2n_socket_write_io_context *io_ctx = (struct s2n_socket_write_io_context *) conn->send_io_context;
+    struct s2n_socket_write_io_context *io_ctx = (struct s2n_socket_write_io_context *)conn->send_io_context;
     notnull_check(io_ctx);
 
     return io_ctx->original_cork_val;
@@ -120,7 +119,7 @@ int s2n_socket_write_cork(struct s2n_connection *conn)
 #ifdef S2N_CORK
     int optval = S2N_CORK_ON;
 
-    struct s2n_socket_write_io_context *w_io_ctx = (struct s2n_socket_write_io_context *) conn->send_io_context;
+    struct s2n_socket_write_io_context *w_io_ctx = (struct s2n_socket_write_io_context *)conn->send_io_context;
     notnull_check(w_io_ctx);
 
     /* Ignore the return value, if it fails it fails */
@@ -135,7 +134,7 @@ int s2n_socket_write_uncork(struct s2n_connection *conn)
 #ifdef S2N_CORK
     int optval = S2N_CORK_OFF;
 
-    struct s2n_socket_write_io_context *w_io_ctx = (struct s2n_socket_write_io_context *) conn->send_io_context;
+    struct s2n_socket_write_io_context *w_io_ctx = (struct s2n_socket_write_io_context *)conn->send_io_context;
     notnull_check(w_io_ctx);
 
     /* Ignore the return value, if it fails it fails */
@@ -148,7 +147,7 @@ int s2n_socket_write_uncork(struct s2n_connection *conn)
 int s2n_socket_set_read_size(struct s2n_connection *conn, int size)
 {
 #ifdef SO_RCVLOWAT
-    struct s2n_socket_read_io_context *r_io_ctx = (struct s2n_socket_read_io_context *) conn->recv_io_context;
+    struct s2n_socket_read_io_context *r_io_ctx = (struct s2n_socket_read_io_context *)conn->recv_io_context;
     notnull_check(r_io_ctx);
 
     setsockopt(r_io_ctx->fd, IPPROTO_TCP, SO_RCVLOWAT, &size, sizeof(size));
@@ -159,7 +158,7 @@ int s2n_socket_set_read_size(struct s2n_connection *conn, int size)
 
 int s2n_socket_read(void *io_context, uint8_t *buf, uint32_t len)
 {
-    int rfd = ((struct s2n_socket_read_io_context*) io_context)->fd;
+    int rfd = ((struct s2n_socket_read_io_context *)io_context)->fd;
     if (rfd < 0) {
         errno = EBADF;
         return -1;
@@ -173,7 +172,7 @@ int s2n_socket_read(void *io_context, uint8_t *buf, uint32_t len)
 
 int s2n_socket_write(void *io_context, const uint8_t *buf, uint32_t len)
 {
-    int wfd = ((struct s2n_socket_write_io_context*) io_context)->fd;
+    int wfd = ((struct s2n_socket_write_io_context *)io_context)->fd;
     if (wfd < 0) {
         errno = EBADF;
         return -1;

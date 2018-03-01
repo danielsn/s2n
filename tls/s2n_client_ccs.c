@@ -26,7 +26,7 @@
 #include "utils/s2n_safety.h"
 
 /* From RFC5246 7.1. */
-#define CHANGE_CIPHER_SPEC_TYPE  1
+#define CHANGE_CIPHER_SPEC_TYPE 1
 
 int s2n_client_ccs_recv(struct s2n_connection *conn)
 {
@@ -34,7 +34,7 @@ int s2n_client_ccs_recv(struct s2n_connection *conn)
 
     GUARD(s2n_prf_client_finished(conn));
 
-    struct s2n_blob seq = {.data = conn->secure.client_sequence_number,.size = sizeof(conn->secure.client_sequence_number) };
+    struct s2n_blob seq = {.data = conn->secure.client_sequence_number, .size = sizeof(conn->secure.client_sequence_number) };
     GUARD(s2n_blob_zero(&seq));
 
     /* Update the client to use the cipher-suite */

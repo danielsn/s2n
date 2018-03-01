@@ -13,9 +13,9 @@
  * permissions and limitations under the License.
  */
 
-#include "crypto/s2n_sequence.h"
 #include "crypto/s2n_cipher.h"
 #include "crypto/s2n_hmac.h"
+#include "crypto/s2n_sequence.h"
 
 #include "error/s2n_errno.h"
 
@@ -36,21 +36,21 @@ int s2n_record_parse_aead(
     struct s2n_connection *conn,
     uint8_t content_type,
     uint16_t encrypted_length,
-    uint8_t * implicit_iv,
+    uint8_t *implicit_iv,
     struct s2n_hmac_state *mac,
-    uint8_t * sequence_number,
+    uint8_t *sequence_number,
     struct s2n_session_key *session_key)
 {
     uint8_t aad_gen[S2N_TLS_MAX_AAD_LEN] = { 0 };
-    struct s2n_blob aad = {.data = aad_gen,.size = sizeof(aad_gen) };
+    struct s2n_blob aad = {.data = aad_gen, .size = sizeof(aad_gen) };
 
-    struct s2n_blob en = {.size = encrypted_length,.data = s2n_stuffer_raw_read(&conn->in, encrypted_length) };
+    struct s2n_blob en = {.size = encrypted_length, .data = s2n_stuffer_raw_read(&conn->in, encrypted_length) };
     notnull_check(en.data);
     /* In AEAD mode, the explicit IV is in the record */
     gte_check(en.size, cipher_suite->record_alg->cipher->io.aead.record_iv_size);
 
     uint8_t aad_iv[S2N_TLS_MAX_IV_LEN] = { 0 };
-    struct s2n_blob iv = {.data = aad_iv,.size = sizeof(aad_iv) };
+    struct s2n_blob iv = {.data = aad_iv, .size = sizeof(aad_iv) };
     struct s2n_stuffer iv_stuffer;
     GUARD(s2n_stuffer_init(&iv_stuffer, &iv));
 
@@ -64,7 +64,7 @@ int s2n_record_parse_aead(
         GUARD(s2n_stuffer_write_bytes(&iv_stuffer, four_zeroes, 4));
         GUARD(s2n_stuffer_write_bytes(&iv_stuffer, sequence_number, S2N_TLS_SEQUENCE_NUM_LEN));
         for (int i = 0; i < cipher_suite->record_alg->cipher->io.aead.fixed_iv_size; i++) {
-	    S2N_INVARIENT(i <= cipher_suite->record_alg->cipher->io.aead.fixed_iv_size);
+            S2N_INVARIENT(i <= cipher_suite->record_alg->cipher->io.aead.fixed_iv_size);
             aad_iv[i] = aad_iv[i] ^ implicit_iv[i];
         }
     } else {
@@ -93,7 +93,7 @@ int s2n_record_parse_aead(
     ne_check(en.size, 0);
 
     GUARD(cipher_suite->record_alg->cipher->io.aead.decrypt(session_key, &iv, &aad, &en, &en));
-    struct s2n_blob seq = {.data = sequence_number,.size = S2N_TLS_SEQUENCE_NUM_LEN };
+    struct s2n_blob seq = {.data = sequence_number, .size = S2N_TLS_SEQUENCE_NUM_LEN };
     GUARD(s2n_increment_sequence_number(&seq));
 
     /* O.k., we've successfully read and decrypted the record, now we need to align the stuffer

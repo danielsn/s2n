@@ -21,7 +21,7 @@
 
 int main(int argc, char **argv)
 {
-    uint8_t entropy[2048] = {0};
+    uint8_t entropy[2048] = { 0 };
     struct s2n_stuffer stuffer;
     uint8_t u8;
     uint16_t u16;
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_stuffer_alloc(&stuffer, 100));
 
     /* Try to write 101 bytes */
-    struct s2n_blob in = {.data = entropy,.size = 101 };
+    struct s2n_blob in = {.data = entropy, .size = 101 };
     EXPECT_FAILURE(s2n_stuffer_write(&stuffer, &in));
 
     /* Try to write 101 1-byte ints bytes */

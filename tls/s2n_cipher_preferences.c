@@ -13,8 +13,8 @@
  * permissions and limitations under the License.
  */
 
-#include <strings.h>
 #include <stdint.h>
+#include <strings.h>
 
 #include "tls/s2n_cipher_preferences.h"
 #include "tls/s2n_config.h"
@@ -34,15 +34,15 @@ struct s2n_cipher_suite *cipher_suites_20140601[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20140601 = {
-    .count = sizeof(cipher_suites_20140601) / sizeof(cipher_suites_20140601[0]),
-    .suites = cipher_suites_20140601,
+    .count                    = sizeof(cipher_suites_20140601) / sizeof(cipher_suites_20140601[0]),
+    .suites                   = cipher_suites_20140601,
     .minimum_protocol_version = S2N_SSLv3
 };
 
 /* Disable SSLv3 due to POODLE */
 const struct s2n_cipher_preferences cipher_preferences_20141001 = {
-    .count = sizeof(cipher_suites_20140601) / sizeof(cipher_suites_20140601[0]),
-    .suites = cipher_suites_20140601,
+    .count                    = sizeof(cipher_suites_20140601) / sizeof(cipher_suites_20140601[0]),
+    .suites                   = cipher_suites_20140601,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -57,8 +57,8 @@ struct s2n_cipher_suite *cipher_suites_20150202[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20150202 = {
-    .count = sizeof(cipher_suites_20150202) / sizeof(cipher_suites_20150202[0]),
-    .suites = cipher_suites_20150202,
+    .count                    = sizeof(cipher_suites_20150202) / sizeof(cipher_suites_20150202[0]),
+    .suites                   = cipher_suites_20150202,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -75,8 +75,8 @@ struct s2n_cipher_suite *cipher_suites_20150214[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20150214 = {
-    .count = sizeof(cipher_suites_20150214) / sizeof(cipher_suites_20150214[0]),
-    .suites = cipher_suites_20150214,
+    .count                    = sizeof(cipher_suites_20150214) / sizeof(cipher_suites_20150214[0]),
+    .suites                   = cipher_suites_20150214,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -98,8 +98,8 @@ struct s2n_cipher_suite *cipher_suites_20160411[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20160411 = {
-    .count = sizeof(cipher_suites_20160411) / sizeof(cipher_suites_20160411[0]),
-    .suites = cipher_suites_20160411,
+    .count                    = sizeof(cipher_suites_20160411) / sizeof(cipher_suites_20160411[0]),
+    .suites                   = cipher_suites_20160411,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -118,8 +118,8 @@ struct s2n_cipher_suite *cipher_suites_20150306[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20150306 = {
-    .count = sizeof(cipher_suites_20150306) / sizeof(cipher_suites_20150306[0]),
-    .suites = cipher_suites_20150306,
+    .count                    = sizeof(cipher_suites_20150306) / sizeof(cipher_suites_20150306[0]),
+    .suites                   = cipher_suites_20150306,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -140,8 +140,8 @@ struct s2n_cipher_suite *cipher_suites_20160804[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20160804 = {
-    .count = sizeof(cipher_suites_20160804) / sizeof(cipher_suites_20160804[0]),
-    .suites = cipher_suites_20160804,
+    .count                    = sizeof(cipher_suites_20160804) / sizeof(cipher_suites_20160804[0]),
+    .suites                   = cipher_suites_20160804,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -157,8 +157,8 @@ struct s2n_cipher_suite *cipher_suites_20160824[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20160824 = {
-    .count = sizeof(cipher_suites_20160824) / sizeof(cipher_suites_20160824[0]),
-    .suites = cipher_suites_20160824,
+    .count                    = sizeof(cipher_suites_20160824) / sizeof(cipher_suites_20160824[0]),
+    .suites                   = cipher_suites_20160824,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -176,8 +176,8 @@ struct s2n_cipher_suite *cipher_suites_20170210[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20170210 = {
-    .count = sizeof(cipher_suites_20170210) / sizeof(cipher_suites_20170210[0]),
-    .suites = cipher_suites_20170210,
+    .count                    = sizeof(cipher_suites_20170210) / sizeof(cipher_suites_20170210[0]),
+    .suites                   = cipher_suites_20170210,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -205,8 +205,8 @@ struct s2n_cipher_suite *cipher_suites_20170328[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20170328 = {
-    .count = sizeof(cipher_suites_20170328) / sizeof(cipher_suites_20170328[0]),
-    .suites = cipher_suites_20170328,
+    .count                    = sizeof(cipher_suites_20170328) / sizeof(cipher_suites_20170328[0]),
+    .suites                   = cipher_suites_20170328,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -226,8 +226,8 @@ struct s2n_cipher_suite *cipher_suites_20170405[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20170405 = {
-    .count = sizeof(cipher_suites_20170405) / sizeof(cipher_suites_20170405[0]),
-    .suites = cipher_suites_20170405,
+    .count                    = sizeof(cipher_suites_20170405) / sizeof(cipher_suites_20170405[0]),
+    .suites                   = cipher_suites_20170405,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -249,8 +249,8 @@ struct s2n_cipher_suite *cipher_suites_20170718[] = {
 };
 
 const struct s2n_cipher_preferences cipher_preferences_20170718 = {
-    .count = sizeof(cipher_suites_20170718) / sizeof(cipher_suites_20170718[0]),
-    .suites = cipher_suites_20170718,
+    .count                    = sizeof(cipher_suites_20170718) / sizeof(cipher_suites_20170718[0]),
+    .suites                   = cipher_suites_20170718,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -277,8 +277,8 @@ struct s2n_cipher_suite *cipher_suites_elb_security_policy_2015_04[] = {
 };
 
 const struct s2n_cipher_preferences elb_security_policy_2015_04 = {
-    .count = sizeof(cipher_suites_elb_security_policy_2015_04) / sizeof(cipher_suites_elb_security_policy_2015_04[0]),
-    .suites = cipher_suites_elb_security_policy_2015_04,
+    .count                    = sizeof(cipher_suites_elb_security_policy_2015_04) / sizeof(cipher_suites_elb_security_policy_2015_04[0]),
+    .suites                   = cipher_suites_elb_security_policy_2015_04,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -304,8 +304,8 @@ struct s2n_cipher_suite *cipher_suites_elb_security_policy_2016_08[] = {
 };
 
 const struct s2n_cipher_preferences elb_security_policy_2016_08 = {
-    .count = sizeof(cipher_suites_elb_security_policy_2016_08) / sizeof(cipher_suites_elb_security_policy_2016_08[0]),
-    .suites = cipher_suites_elb_security_policy_2016_08,
+    .count                    = sizeof(cipher_suites_elb_security_policy_2016_08) / sizeof(cipher_suites_elb_security_policy_2016_08[0]),
+    .suites                   = cipher_suites_elb_security_policy_2016_08,
     .minimum_protocol_version = S2N_TLS10
 };
 
@@ -325,8 +325,8 @@ struct s2n_cipher_suite *cipher_suites_elb_security_policy_tls_1_2_2017_01[] = {
 };
 
 const struct s2n_cipher_preferences elb_security_policy_tls_1_2_2017_01 = {
-    .count = sizeof(cipher_suites_elb_security_policy_tls_1_2_2017_01) / sizeof(cipher_suites_elb_security_policy_tls_1_2_2017_01[0]),
-    .suites = cipher_suites_elb_security_policy_tls_1_2_2017_01,
+    .count                    = sizeof(cipher_suites_elb_security_policy_tls_1_2_2017_01) / sizeof(cipher_suites_elb_security_policy_tls_1_2_2017_01[0]),
+    .suites                   = cipher_suites_elb_security_policy_tls_1_2_2017_01,
     .minimum_protocol_version = S2N_TLS12
 };
 
@@ -352,8 +352,8 @@ struct s2n_cipher_suite *cipher_suites_elb_security_policy_tls_1_1_2017_01[] = {
 };
 
 const struct s2n_cipher_preferences elb_security_policy_tls_1_1_2017_01 = {
-    .count = sizeof(cipher_suites_elb_security_policy_tls_1_1_2017_01) / sizeof(cipher_suites_elb_security_policy_tls_1_1_2017_01[0]),
-    .suites = cipher_suites_elb_security_policy_tls_1_1_2017_01,
+    .count                    = sizeof(cipher_suites_elb_security_policy_tls_1_1_2017_01) / sizeof(cipher_suites_elb_security_policy_tls_1_1_2017_01[0]),
+    .suites                   = cipher_suites_elb_security_policy_tls_1_1_2017_01,
     .minimum_protocol_version = S2N_TLS11
 };
 
@@ -362,13 +362,13 @@ struct {
     const struct s2n_cipher_preferences *preferences;
 } selection[] = {
     { "default", &cipher_preferences_20170210 },
-    { "default_fips", &cipher_preferences_20170405},
-    { "ELBSecurityPolicy-TLS-1-0-2015-04", &elb_security_policy_2015_04},
+    { "default_fips", &cipher_preferences_20170405 },
+    { "ELBSecurityPolicy-TLS-1-0-2015-04", &elb_security_policy_2015_04 },
     /* Not a mistake. TLS-1-0-2015-05 and 2016-08 are equivalent */
-    { "ELBSecurityPolicy-TLS-1-0-2015-05", &elb_security_policy_2016_08},
-    { "ELBSecurityPolicy-2016-08", &elb_security_policy_2016_08},
-    { "ELBSecurityPolicy-TLS-1-1-2017-01", &elb_security_policy_tls_1_1_2017_01},
-    { "ELBSecurityPolicy-TLS-1-2-2017-01", &elb_security_policy_tls_1_2_2017_01},
+    { "ELBSecurityPolicy-TLS-1-0-2015-05", &elb_security_policy_2016_08 },
+    { "ELBSecurityPolicy-2016-08", &elb_security_policy_2016_08 },
+    { "ELBSecurityPolicy-TLS-1-1-2017-01", &elb_security_policy_tls_1_1_2017_01 },
+    { "ELBSecurityPolicy-TLS-1-2-2017-01", &elb_security_policy_tls_1_2_2017_01 },
     { "20140601", &cipher_preferences_20140601 },
     { "20141001", &cipher_preferences_20141001 },
     { "20150202", &cipher_preferences_20150202 },
@@ -398,4 +398,3 @@ int s2n_config_set_cipher_preferences(struct s2n_config *config, const char *ver
 
     S2N_ERROR(S2N_ERR_INVALID_CIPHER_PREFERENCES);
 }
-

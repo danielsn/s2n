@@ -17,10 +17,10 @@
 
 #include "testlib/s2n_testlib.h"
 
+#include <fcntl.h>
+#include <stdint.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <stdint.h>
-#include <fcntl.h>
 
 #include <s2n.h>
 
@@ -32,7 +32,7 @@
 int mock_client(int writefd, int readfd, uint8_t *expected_data, uint32_t size)
 {
     uint8_t *buffer = malloc(size);
-    uint8_t *ptr = buffer;
+    uint8_t *ptr    = buffer;
     struct s2n_connection *client_conn;
     struct s2n_config *client_config;
     s2n_blocked_status blocked;
@@ -41,7 +41,7 @@ int mock_client(int writefd, int readfd, uint8_t *expected_data, uint32_t size)
     /* Give the server a chance to listen */
     sleep(1);
 
-    client_conn = s2n_connection_new(S2N_CLIENT);
+    client_conn   = s2n_connection_new(S2N_CLIENT);
     client_config = s2n_config_new();
     s2n_config_disable_x509_verification(client_config);
     s2n_connection_set_config(client_conn, client_config);
@@ -56,7 +56,7 @@ int mock_client(int writefd, int readfd, uint8_t *expected_data, uint32_t size)
 
     /* Receive 10MB of data */
     uint32_t remaining = size;
-    while(remaining) {
+    while (remaining) {
         int r = s2n_recv(client_conn, ptr, remaining, &blocked);
         if (r < 0) {
             continue;
@@ -65,10 +65,10 @@ int mock_client(int writefd, int readfd, uint8_t *expected_data, uint32_t size)
         ptr += r;
     }
 
-    int shutdown_rc= -1;
+    int shutdown_rc = -1;
     do {
         shutdown_rc = s2n_shutdown(client_conn, &blocked);
-    } while(shutdown_rc != 0);
+    } while (shutdown_rc != 0);
 
     for (int i = 0; i < size; i++) {
         if (buffer[i] != expected_data[i]) {
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_config_add_dhparams(config, dhparams_pem));
 
     const uint32_t data_size = 10000000;
-    uint8_t *data = malloc(data_size);
+    uint8_t *data            = malloc(data_size);
     EXPECT_NOT_NULL(data);
 
     /* Get some random data to send/receive */
@@ -121,7 +121,7 @@ int main(int argc, char **argv)
     blob.data = data;
     blob.size = data_size;
     EXPECT_SUCCESS(s2n_get_urandom_data(&blob));
-    
+
     /* Create a pipe */
     EXPECT_SUCCESS(pipe(server_to_client));
     EXPECT_SUCCESS(pipe(client_to_server));
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
     /* Pause the child process by sending it SIGSTP */
     EXPECT_SUCCESS(kill(pid, SIGSTOP));
-    
+
     /* Make our pipes non-blocking */
     EXPECT_NOT_EQUAL(fcntl(client_to_server[0], F_SETFL, fcntl(client_to_server[0], F_GETFL) | O_NONBLOCK), -1);
     EXPECT_NOT_EQUAL(fcntl(server_to_client[1], F_SETFL, fcntl(server_to_client[1], F_GETFL) | O_NONBLOCK), -1);
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
     /* Try to all 10MB of data, should be enough to fill PIPEBUF, so
        we'll get blocked at some point */
     uint32_t remaining = data_size;
-    uint8_t *ptr = data;
+    uint8_t *ptr       = data;
     while (remaining) {
         int r = s2n_send(conn, ptr, remaining, &blocked);
         if (r < 0) {
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
     /* Make our sockets blocking again */
     EXPECT_NOT_EQUAL(fcntl(client_to_server[0], F_SETFL, fcntl(client_to_server[0], F_GETFL) ^ O_NONBLOCK), -1);
     EXPECT_NOT_EQUAL(fcntl(server_to_client[1], F_SETFL, fcntl(server_to_client[1], F_GETFL) ^ O_NONBLOCK), -1);
-    
+
     /* Actually send the remaining data */
     while (remaining) {
         int r = s2n_send(conn, ptr, remaining, &blocked);

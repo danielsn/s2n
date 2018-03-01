@@ -27,7 +27,7 @@
 int s2n_client_finished_recv(struct s2n_connection *conn)
 {
     uint8_t *our_version;
-    our_version = conn->handshake.client_finished;
+    our_version            = conn->handshake.client_finished;
     uint8_t *their_version = s2n_stuffer_raw_read(&conn->handshake.io, S2N_TLS_FINISHED_LEN);
     notnull_check(their_version);
 
@@ -41,7 +41,7 @@ int s2n_client_finished_send(struct s2n_connection *conn)
     uint8_t *our_version;
     GUARD(s2n_prf_client_finished(conn));
 
-    struct s2n_blob seq = {.data = conn->secure.client_sequence_number,.size = sizeof(conn->secure.client_sequence_number) };
+    struct s2n_blob seq = {.data = conn->secure.client_sequence_number, .size = sizeof(conn->secure.client_sequence_number) };
     GUARD(s2n_blob_zero(&seq));
     our_version = conn->handshake.client_finished;
 

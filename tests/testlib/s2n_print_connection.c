@@ -15,8 +15,8 @@
 
 #include <stdio.h>
 
-#include "tls/s2n_connection.h"
 #include "testlib/s2n_testlib.h"
+#include "tls/s2n_connection.h"
 
 void s2n_print_connection(struct s2n_connection *conn, const char *marker)
 {
@@ -34,7 +34,7 @@ void s2n_print_connection(struct s2n_connection *conn, const char *marker)
         }
     }
     printf("\n");
- 
+
     printf("IN Stuffer (write: %d, read: %d, size: %d)\n", conn->in.write_cursor, conn->in.read_cursor, conn->in.blob.size);
     for (i = 0; i < conn->in.write_cursor; i++) {
         printf("%02x", conn->in.blob.data[i]);

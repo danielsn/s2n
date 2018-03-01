@@ -19,13 +19,13 @@
 #include <openssl/err.h>
 
 #include "api/s2n.h"
+#include "s2n_test.h"
 #include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_tls.h"
 #include "utils/s2n_safety.h"
-#include "s2n_test.h"
 
-static const uint8_t TLS_VERSIONS[] = {S2N_TLS10, S2N_TLS11, S2N_TLS12};
+static const uint8_t TLS_VERSIONS[] = { S2N_TLS10, S2N_TLS11, S2N_TLS12 };
 
 static void s2n_fuzz_atexit()
 {
@@ -45,7 +45,7 @@ int LLVMFuzzerInitialize(const uint8_t *buf, size_t len)
 
 int LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len)
 {
-    for(int version = 0; version < (sizeof(TLS_VERSIONS) / sizeof(TLS_VERSIONS[0])); version++){
+    for (int version = 0; version < (sizeof(TLS_VERSIONS) / sizeof(TLS_VERSIONS[0])); version++) {
         /* Setup */
         struct s2n_connection *server_conn = s2n_connection_new(S2N_SERVER);
         notnull_check(server_conn);
@@ -59,7 +59,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len)
 
         /* Cleanup */
         GUARD(s2n_connection_free(server_conn));
-
     }
     return 0;
 }

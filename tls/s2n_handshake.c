@@ -17,9 +17,9 @@
 
 #include "error/s2n_errno.h"
 
+#include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_record.h"
-#include "tls/s2n_cipher_suites.h"
 
 #include "stuffer/s2n_stuffer.h"
 
@@ -55,7 +55,7 @@ int s2n_handshake_finish_header(struct s2n_connection *conn)
     return 0;
 }
 
-int s2n_handshake_parse_header(struct s2n_connection *conn, uint8_t * message_type, uint32_t * length)
+int s2n_handshake_parse_header(struct s2n_connection *conn, uint8_t *message_type, uint32_t *length)
 {
     S2N_ERROR_IF(s2n_stuffer_data_available(&conn->handshake.io) < TLS_HANDSHAKE_HEADER_LENGTH, S2N_ERR_SIZE_MISMATCH);
 
@@ -123,7 +123,7 @@ int s2n_conn_update_required_handshake_hashes(struct s2n_connection *conn)
     /* Clear all of the required hashes */
     memset(conn->handshake.required_hash_algs, 0, sizeof(conn->handshake.required_hash_algs));
 
-    message_type_t handshake_message = s2n_conn_get_current_message_type(conn);
+    message_type_t handshake_message      = s2n_conn_get_current_message_type(conn);
     const uint8_t client_cert_verify_done = (handshake_message >= CLIENT_CERT_VERIFY) ? 1 : 0;
     s2n_cert_auth_type client_cert_auth_type;
     GUARD(s2n_connection_get_client_auth_type(conn, &client_cert_auth_type));
@@ -142,8 +142,7 @@ int s2n_conn_update_required_handshake_hashes(struct s2n_connection *conn)
         GUARD(s2n_handshake_require_hash(&conn->handshake, S2N_HASH_MD5));
         GUARD(s2n_handshake_require_hash(&conn->handshake, S2N_HASH_SHA1));
         break;
-    case S2N_TLS12:
-    {
+    case S2N_TLS12: {
         /* For TLS 1.2 the cipher suite defines the PRF hash alg */
         s2n_hmac_algorithm tls12_prf_alg = conn->secure.cipher_suite->tls12_prf_alg;
         s2n_hash_algorithm hash_alg;

@@ -17,11 +17,11 @@
 
 #include "crypto/s2n_dhe.h"
 
-#include "utils/s2n_random.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_random.h"
 
-#include <openssl/engine.h>
 #include <openssl/dh.h>
+#include <openssl/engine.h>
 #include <s2n.h>
 
 #include "testlib/s2n_testlib.h"
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     EXPECT_EQUAL(s2n_get_private_random_bytes_used(), 0);
 
     /* Parse the DH params */
-    b.data = (uint8_t *) dhparams_pem;
+    b.data = (uint8_t *)dhparams_pem;
     b.size = strlen(dhparams_pem) + 1;
     EXPECT_SUCCESS(s2n_stuffer_alloc(&dhparams_in, b.size));
     EXPECT_SUCCESS(s2n_stuffer_alloc(&dhparams_out, b.size));
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_pkcs3_to_dh_params(&dh_params, &b));
 
     EXPECT_SUCCESS(s2n_dh_generate_ephemeral_key(&dh_params));
-    
+
     /* Verify that our DRBG is called and that over-riding works */
     EXPECT_NOT_EQUAL(s2n_get_private_random_bytes_used(), 0);
 
@@ -75,4 +75,3 @@ int main(int argc, char **argv)
 }
 
 #endif
-

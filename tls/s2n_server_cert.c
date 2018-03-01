@@ -39,7 +39,9 @@ int s2n_server_cert_recv(struct s2n_connection *conn)
     cert_chain.size = size_of_all_certificates;
 
     S2N_ERROR_IF(s2n_x509_validator_validate_cert_chain(&conn->x509_validator, conn, cert_chain.data,
-                                                        cert_chain.size, &cert_type, &public_key) != S2N_CERT_OK, S2N_ERR_CERT_UNTRUSTED);
+                     cert_chain.size, &cert_type, &public_key)
+            != S2N_CERT_OK,
+        S2N_ERR_CERT_UNTRUSTED);
 
     s2n_authentication_method expected_auth_method = conn->secure.cipher_suite->auth_method;
 
@@ -55,7 +57,7 @@ int s2n_server_cert_recv(struct s2n_connection *conn)
     default:
         S2N_ERROR(S2N_ERR_CERT_TYPE_UNSUPPORTED);
     }
-    
+
     conn->secure.client_cert_type = cert_type;
     s2n_pkey_setup_for_type(&public_key, cert_type);
     conn->secure.server_public_key = public_key;

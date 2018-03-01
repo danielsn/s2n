@@ -18,43 +18,43 @@
 
 #include "error/s2n_errno.h"
 
-#include "tls/s2n_tls_parameters.h"
+#include "tls/s2n_alerts.h"
 #include "tls/s2n_connection.h"
 #include "tls/s2n_record.h"
 #include "tls/s2n_resume.h"
-#include "tls/s2n_alerts.h"
+#include "tls/s2n_tls_parameters.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_safety.h"
 
-#define S2N_TLS_ALERT_CLOSE_NOTIFY          0
-#define S2N_TLS_ALERT_UNEXPECTED_MSG        10
-#define S2N_TLS_ALERT_BAD_RECORD_MAC        20
-#define S2N_TLS_ALERT_DECRYPT_FAILED        21
-#define S2N_TLS_ALERT_RECORD_OVERFLOW       22
-#define S2N_TLS_ALERT_DECOMP_FAILED         30
-#define S2N_TLS_ALERT_HANDSHAKE_FAILURE     40
-#define S2N_TLS_ALERT_NO_CERTIFICATE        41
-#define S2N_TLS_ALERT_BAD_CERTIFICATE       42
-#define S2N_TLS_ALERT_UNSUPPORTED_CERT      43
-#define S2N_TLS_ALERT_CERT_REVOKED          44
-#define S2N_TLS_ALERT_CERT_EXPIRED          45
-#define S2N_TLS_ALERT_CERT_UNKNOWN          46
-#define S2N_TLS_ALERT_ILLEGAL_PARAMETER     47
-#define S2N_TLS_ALERT_UNKNOWN_CA            48
-#define S2N_TLS_ALERT_ACCESS_DENIED         49
-#define S2N_TLS_ALERT_DECODE_ERROR          50
-#define S2N_TLS_ALERT_DECRYPT_ERROR         51
-#define S2N_TLS_ALERT_EXPORT_RESTRICTED     60
-#define S2N_TLS_ALERT_PROTOCOL_VERSION      70
+#define S2N_TLS_ALERT_CLOSE_NOTIFY 0
+#define S2N_TLS_ALERT_UNEXPECTED_MSG 10
+#define S2N_TLS_ALERT_BAD_RECORD_MAC 20
+#define S2N_TLS_ALERT_DECRYPT_FAILED 21
+#define S2N_TLS_ALERT_RECORD_OVERFLOW 22
+#define S2N_TLS_ALERT_DECOMP_FAILED 30
+#define S2N_TLS_ALERT_HANDSHAKE_FAILURE 40
+#define S2N_TLS_ALERT_NO_CERTIFICATE 41
+#define S2N_TLS_ALERT_BAD_CERTIFICATE 42
+#define S2N_TLS_ALERT_UNSUPPORTED_CERT 43
+#define S2N_TLS_ALERT_CERT_REVOKED 44
+#define S2N_TLS_ALERT_CERT_EXPIRED 45
+#define S2N_TLS_ALERT_CERT_UNKNOWN 46
+#define S2N_TLS_ALERT_ILLEGAL_PARAMETER 47
+#define S2N_TLS_ALERT_UNKNOWN_CA 48
+#define S2N_TLS_ALERT_ACCESS_DENIED 49
+#define S2N_TLS_ALERT_DECODE_ERROR 50
+#define S2N_TLS_ALERT_DECRYPT_ERROR 51
+#define S2N_TLS_ALERT_EXPORT_RESTRICTED 60
+#define S2N_TLS_ALERT_PROTOCOL_VERSION 70
 #define S2N_TLS_ALERT_INSUFFICIENT_SECURITY 71
-#define S2N_TLS_ALERT_INTERNAL_ERROR        80
-#define S2N_TLS_ALERT_USER_CANCELED         90
-#define S2N_TLS_ALERT_NO_RENEGOTIATION      100
+#define S2N_TLS_ALERT_INTERNAL_ERROR 80
+#define S2N_TLS_ALERT_USER_CANCELED 90
+#define S2N_TLS_ALERT_NO_RENEGOTIATION 100
 #define S2N_TLS_ALERT_UNSUPPORTED_EXTENSION 110
 
-#define S2N_TLS_ALERT_LEVEL_WARNING         1
-#define S2N_TLS_ALERT_LEVEL_FATAL           2
+#define S2N_TLS_ALERT_LEVEL_WARNING 1
+#define S2N_TLS_ALERT_LEVEL_FATAL 2
 
 int s2n_process_alert_fragment(struct s2n_connection *conn)
 {
@@ -99,7 +99,7 @@ int s2n_queue_writer_close_alert_warning(struct s2n_connection *conn)
     alert[0] = S2N_TLS_ALERT_LEVEL_WARNING;
     alert[1] = S2N_TLS_ALERT_CLOSE_NOTIFY;
 
-    struct s2n_blob out = {.data = alert,.size = sizeof(alert) };
+    struct s2n_blob out = {.data = alert, .size = sizeof(alert) };
 
     /* If there is an alert pending or we've already sent a close_notify, do nothing */
     if (s2n_stuffer_data_available(&conn->writer_alert_out) || conn->close_notify_queued) {
@@ -118,7 +118,7 @@ static int s2n_queue_reader_alert(struct s2n_connection *conn, uint8_t level, ui
     alert[0] = level;
     alert[1] = error_code;
 
-    struct s2n_blob out = {.data = alert,.size = sizeof(alert) };
+    struct s2n_blob out = {.data = alert, .size = sizeof(alert) };
 
     /* If there is an alert pending, do nothing */
     if (s2n_stuffer_data_available(&conn->reader_alert_out)) {

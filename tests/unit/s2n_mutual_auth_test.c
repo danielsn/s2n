@@ -21,10 +21,10 @@
 #include "testlib/s2n_testlib.h"
 
 #include "crypto/s2n_fips.h"
-#include "tls/s2n_connection.h"
-#include "tls/s2n_handshake.h"
 #include "tls/s2n_cipher_preferences.h"
 #include "tls/s2n_cipher_suites.h"
+#include "tls/s2n_connection.h"
+#include "tls/s2n_handshake.h"
 #include "utils/s2n_safety.h"
 
 int buffer_read(void *io_context, uint8_t *buf, uint32_t len)
@@ -36,7 +36,7 @@ int buffer_read(void *io_context, uint8_t *buf, uint32_t len)
         return 0;
     }
 
-    in_buf = (struct s2n_stuffer *) io_context;
+    in_buf = (struct s2n_stuffer *)io_context;
     if (in_buf == NULL) {
         errno = EINVAL;
         return -1;
@@ -44,7 +44,7 @@ int buffer_read(void *io_context, uint8_t *buf, uint32_t len)
 
     // read the number of bytes requested or less if it isn't available
     n_avail = s2n_stuffer_data_available(in_buf);
-    n_read = (len < n_avail) ? len : n_avail;
+    n_read  = (len < n_avail) ? len : n_avail;
 
     if (n_read == 0) {
         errno = EAGAIN;
@@ -63,7 +63,7 @@ int buffer_write(void *io_context, const uint8_t *buf, uint32_t len)
         return 0;
     }
 
-    out = (struct s2n_stuffer *) io_context;
+    out = (struct s2n_stuffer *)io_context;
     if (out == NULL) {
         errno = EINVAL;
         return -1;
@@ -82,9 +82,10 @@ struct host_verify_data {
     uint8_t allow;
 };
 
-static uint8_t verify_host_fn(const char *host_name, size_t host_name_len, void *data) {
-    struct host_verify_data *verify_data = (struct host_verify_data *) data;
-    verify_data->callback_invoked = 1;
+static uint8_t verify_host_fn(const char *host_name, size_t host_name_len, void *data)
+{
+    struct host_verify_data *verify_data = (struct host_verify_data *)data;
+    verify_data->callback_invoked        = 1;
     return verify_data->allow;
 }
 
@@ -135,10 +136,9 @@ int main(int argc, char **argv)
     EXPECT_SUCCESS(s2n_config_add_dhparams(config, dhparams_pem));
     EXPECT_NOT_NULL(default_cipher_preferences = config->cipher_preferences);
 
-    struct host_verify_data verify_data = {.allow = 1, .callback_invoked = 0};
+    struct host_verify_data verify_data = {.allow = 1, .callback_invoked = 0 };
     EXPECT_SUCCESS(s2n_config_set_verify_host_callback(config, verify_host_fn, &verify_data));
     EXPECT_SUCCESS(s2n_config_set_verification_ca_location(config, S2N_DEFAULT_TEST_CERT_CHAIN, NULL));
-
 
     /* Verify that a handshake succeeds for every cipher in the default list. */
     for (int cipher_idx = 0; cipher_idx < default_cipher_preferences->count; cipher_idx++) {
@@ -155,7 +155,7 @@ int main(int argc, char **argv)
            NOTE: Its safe to use memcpy as the address of server_cipher_preferences
            will never be NULL */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -164,7 +164,7 @@ int main(int argc, char **argv)
         }
 
         server_cipher_preferences.suites = &cur_cipher;
-        config->cipher_preferences = &server_cipher_preferences;
+        config->cipher_preferences       = &server_cipher_preferences;
 
         EXPECT_NOT_NULL(server_conn = s2n_connection_new(S2N_SERVER));
         EXPECT_SUCCESS(s2n_connection_set_client_auth_type(server_conn, S2N_CERT_AUTH_REQUIRED));
@@ -173,7 +173,6 @@ int main(int argc, char **argv)
         EXPECT_NOT_NULL(client_conn = s2n_connection_new(S2N_CLIENT));
         EXPECT_SUCCESS(s2n_connection_set_client_auth_type(client_conn, S2N_CERT_AUTH_REQUIRED));
         EXPECT_SUCCESS(s2n_connection_set_config(client_conn, config));
-
 
         /* Set up our I/O callbacks. Use stuffers for the "I/O context" */
         EXPECT_SUCCESS(s2n_stuffer_growable_alloc(&client_to_server, 0));
@@ -201,7 +200,7 @@ int main(int argc, char **argv)
             tries += 1;
 
             if (tries >= MAX_TRIES) {
-               FAIL();
+                FAIL();
             }
         } while (client_blocked || server_blocked);
 
@@ -215,7 +214,6 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_stuffer_free(&server_to_client));
         EXPECT_SUCCESS(s2n_stuffer_free(&client_to_server));
     }
-
 
     /*
      * Test Mutual Auth using **s2n_config_set_client_auth_type**
@@ -237,7 +235,7 @@ int main(int argc, char **argv)
            NOTE: Its safe to use memcpy as the address of server_cipher_preferences
            will never be NULL */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -246,7 +244,7 @@ int main(int argc, char **argv)
         }
 
         server_cipher_preferences.suites = &cur_cipher;
-        config->cipher_preferences = &server_cipher_preferences;
+        config->cipher_preferences       = &server_cipher_preferences;
 
         EXPECT_NOT_NULL(server_conn = s2n_connection_new(S2N_SERVER));
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
@@ -280,7 +278,7 @@ int main(int argc, char **argv)
             tries += 1;
 
             if (tries >= MAX_TRIES) {
-               FAIL();
+                FAIL();
             }
         } while (client_blocked || server_blocked);
 
@@ -293,7 +291,6 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_stuffer_free(&server_to_client));
         EXPECT_SUCCESS(s2n_stuffer_free(&client_to_server));
     }
-
 
     /*
      * Test Mutual Auth using connection override of **s2n_config_set_client_auth_type**
@@ -315,7 +312,7 @@ int main(int argc, char **argv)
            NOTE: Its safe to use memcpy as the address of server_cipher_preferences
            will never be NULL */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -324,7 +321,7 @@ int main(int argc, char **argv)
         }
 
         server_cipher_preferences.suites = &cur_cipher;
-        config->cipher_preferences = &server_cipher_preferences;
+        config->cipher_preferences       = &server_cipher_preferences;
 
         EXPECT_NOT_NULL(server_conn = s2n_connection_new(S2N_SERVER));
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
@@ -361,7 +358,7 @@ int main(int argc, char **argv)
             tries += 1;
 
             if (tries >= MAX_TRIES) {
-               FAIL();
+                FAIL();
             }
         } while (client_blocked || server_blocked);
 
@@ -396,7 +393,7 @@ int main(int argc, char **argv)
            NOTE: Its safe to use memcpy as the address of server_cipher_preferences
            will never be NULL */
         memcpy(&server_cipher_preferences, default_cipher_preferences, sizeof(server_cipher_preferences));
-        server_cipher_preferences.count = 1;
+        server_cipher_preferences.count     = 1;
         struct s2n_cipher_suite *cur_cipher = default_cipher_preferences->suites[cipher_idx];
 
         if (!cur_cipher->available) {
@@ -405,7 +402,7 @@ int main(int argc, char **argv)
         }
 
         server_cipher_preferences.suites = &cur_cipher;
-        config->cipher_preferences = &server_cipher_preferences;
+        config->cipher_preferences       = &server_cipher_preferences;
 
         EXPECT_NOT_NULL(server_conn = s2n_connection_new(S2N_SERVER));
         EXPECT_SUCCESS(s2n_connection_set_config(server_conn, config));
@@ -415,7 +412,6 @@ int main(int argc, char **argv)
 
         /* Only set S2N_CERT_AUTH_REQUIRED on the server and not the client so that the connection fails */
         EXPECT_SUCCESS(s2n_connection_set_client_auth_type(server_conn, S2N_CERT_AUTH_REQUIRED));
-
 
         /* Set up our I/O callbacks. Use stuffers for the "I/O context" */
         EXPECT_SUCCESS(s2n_stuffer_growable_alloc(&client_to_server, 0));
@@ -433,7 +429,7 @@ int main(int argc, char **argv)
         EXPECT_SUCCESS(s2n_connection_set_recv_ctx(server_conn, &client_to_server));
         EXPECT_SUCCESS(s2n_connection_set_send_ctx(server_conn, &server_to_client));
 
-        int tries = 0;
+        int tries    = 0;
         int failures = 0;
         do {
             int client_ret, server_ret;
@@ -442,7 +438,7 @@ int main(int argc, char **argv)
             tries += 1;
 
             if (client_ret != 0 || server_ret != 0) {
-               failures ++;
+                failures++;
             }
         } while ((client_blocked || server_blocked) && tries < MAX_TRIES);
 

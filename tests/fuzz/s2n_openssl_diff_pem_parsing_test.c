@@ -21,21 +21,21 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include <openssl/ssl.h>
 #include <openssl/conf.h>
-#include <openssl/rand.h>
-#include <openssl/err.h>
-#include <openssl/x509.h>
 #include <openssl/dh.h>
 #include <openssl/ec.h>
+#include <openssl/err.h>
+#include <openssl/rand.h>
+#include <openssl/ssl.h>
+#include <openssl/x509.h>
 
 #include "api/s2n.h"
+#include "s2n_test.h"
 #include "stuffer/s2n_stuffer.h"
 #include "tls/s2n_config.h"
 #include "utils/s2n_blob.h"
 #include "utils/s2n_mem.h"
 #include "utils/s2n_safety.h"
-#include "s2n_test.h"
 
 static void s2n_fuzz_atexit()
 {
@@ -62,13 +62,13 @@ int LLVMFuzzerInitialize(const uint8_t *buf, size_t len)
 static int openssl_parse_cert_chain(struct s2n_stuffer *in)
 {
     uint8_t chain_len = 0;
-    BIO *membio = BIO_new_mem_buf((void *) in->blob.data, in->blob.size - 1);
-    X509 *cert = NULL;
+    BIO *membio       = BIO_new_mem_buf((void *)in->blob.data, in->blob.size - 1);
+    X509 *cert        = NULL;
 
     while (1) {
         /* Try parsing Cert PEM with OpenSSL */
         cert = PEM_read_bio_X509(membio, NULL, 0, NULL);
-        if (cert != NULL){
+        if (cert != NULL) {
             X509_free(cert);
             chain_len++;
         } else {
@@ -78,7 +78,6 @@ static int openssl_parse_cert_chain(struct s2n_stuffer *in)
     BIO_free(membio);
 
     return chain_len;
-
 }
 
 static int s2n_parse_cert_chain(struct s2n_stuffer *in)
@@ -87,22 +86,22 @@ static int s2n_parse_cert_chain(struct s2n_stuffer *in)
 
     struct s2n_blob mem;
     GUARD(s2n_alloc(&mem, sizeof(struct s2n_cert_chain_and_key)));
-    config->cert_and_key_pairs = (struct s2n_cert_chain_and_key *)(void *)mem.data;
-    config->cert_and_key_pairs->cert_chain.head = NULL;
+    config->cert_and_key_pairs                   = (struct s2n_cert_chain_and_key *)(void *)mem.data;
+    config->cert_and_key_pairs->cert_chain.head  = NULL;
     config->cert_and_key_pairs->private_key.free = NULL;
     config->cert_and_key_pairs->ocsp_status.data = NULL;
     config->cert_and_key_pairs->ocsp_status.size = 0;
-    config->cert_and_key_pairs->sct_list.data = NULL;
-    config->cert_and_key_pairs->sct_list.size = 0;
+    config->cert_and_key_pairs->sct_list.data    = NULL;
+    config->cert_and_key_pairs->sct_list.size    = 0;
     memset(&config->cert_and_key_pairs->ocsp_status, 0, sizeof(config->cert_and_key_pairs->ocsp_status));
     memset(&config->cert_and_key_pairs->sct_list, 0, sizeof(config->cert_and_key_pairs->sct_list));
 
     /* Use s2n_config_add_cert_chain_from_stuffer() so that \0 characters don't truncate strings. */
-     s2n_config_add_cert_chain_from_stuffer(config, in);
+    s2n_config_add_cert_chain_from_stuffer(config, in);
 
     struct s2n_cert *next = config->cert_and_key_pairs->cert_chain.head;
-    int chain_len = 0;
-    while(next != NULL) {
+    int chain_len         = 0;
+    while (next != NULL) {
         chain_len++;
         next = next->next;
     }
@@ -124,7 +123,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len)
     uint8_t s2n_chain_len = s2n_parse_cert_chain(&in);
     GUARD(s2n_stuffer_free(&in));
 
-
     if (openssl_chain_len > s2n_chain_len) {
         /* If we return -1 here, then this fuzz test will fail if OpenSSL is able to parse a messy PEM file that s2n
          * isn't able to. All well formed PEM files that follow the RFC are still parsable by both, but we should
@@ -133,7 +131,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len)
 
         /* return -1; */
     }
-
 
     return 0;
 }

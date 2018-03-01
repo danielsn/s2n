@@ -13,28 +13,28 @@
  * permissions and limitations under the License.
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <poll.h>
 #include <netdb.h>
+#include <poll.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdio.h>
 #include <errno.h>
-#include <s2n.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
+#include <s2n.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
-#include "crypto/s2n_rsa.h"
 #include "crypto/s2n_pkey.h"
+#include "crypto/s2n_rsa.h"
 
 void print_s2n_error(const char *app_error)
 {
     fprintf(stderr, "%s: '%s' : '%s'\n", app_error, s2n_strerror(s2n_errno, "EN"),
-            s2n_strerror_debug(s2n_errno, "EN"));
+        s2n_strerror_debug(s2n_errno, "EN"));
 }
 
 int negotiate(struct s2n_connection *conn)
@@ -99,15 +99,15 @@ int echo(struct s2n_connection *conn, int sockfd)
 {
     struct pollfd readers[2];
 
-    readers[0].fd = sockfd;
+    readers[0].fd     = sockfd;
     readers[0].events = POLLIN;
-    readers[1].fd = STDIN_FILENO;
+    readers[1].fd     = STDIN_FILENO;
     readers[1].events = POLLIN;
 
     /* Act as a simple proxy between stdin and the SSL connection */
     int p;
     s2n_blocked_status blocked;
-  POLL:
+POLL:
     while ((p = poll(readers, 2, -1)) > 0) {
         char buffer[10240];
         int bytes_read, bytes_written;
@@ -140,8 +140,8 @@ int echo(struct s2n_connection *conn, int sockfd)
                 bytes_available = sizeof(buffer);
             }
 
-            /* Read as many bytes as we think we can */
-          READ:
+        /* Read as many bytes as we think we can */
+        READ:
             bytes_read = read(STDIN_FILENO, buffer, bytes_available);
             if (bytes_read < 0) {
                 if (errno == EINTR) {

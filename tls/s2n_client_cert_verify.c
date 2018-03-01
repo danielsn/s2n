@@ -17,8 +17,8 @@
 
 #include "error/s2n_errno.h"
 
-#include "tls/s2n_connection.h"
 #include "tls/s2n_config.h"
+#include "tls/s2n_connection.h"
 #include "tls/s2n_signature_algorithms.h"
 #include "tls/s2n_tls.h"
 
@@ -26,15 +26,14 @@
 
 #include "utils/s2n_safety.h"
 
-
 int s2n_client_cert_verify_recv(struct s2n_connection *conn)
 {
     struct s2n_stuffer *in = &conn->handshake.io;
 
-    s2n_hash_algorithm chosen_hash_alg = S2N_HASH_MD5_SHA1;
+    s2n_hash_algorithm chosen_hash_alg           = S2N_HASH_MD5_SHA1;
     s2n_signature_algorithm chosen_signature_alg = S2N_SIGNATURE_RSA;
 
-    if(conn->actual_protocol_version == S2N_TLS12){
+    if (conn->actual_protocol_version == S2N_TLS12) {
         /* Make sure the client is actually using one of the {sig,hash} pairs that we sent in the ClientCertificateRequest */
         GUARD(s2n_get_signature_hash_pair_if_supported(in, &chosen_hash_alg, &chosen_signature_alg));
     }
@@ -62,20 +61,19 @@ int s2n_client_cert_verify_recv(struct s2n_connection *conn)
     return 0;
 }
 
-
 int s2n_client_cert_verify_send(struct s2n_connection *conn)
 {
     struct s2n_stuffer *out = &conn->handshake.io;
 
-    s2n_hash_algorithm chosen_hash_alg = S2N_HASH_MD5_SHA1;
+    s2n_hash_algorithm chosen_hash_alg           = S2N_HASH_MD5_SHA1;
     s2n_signature_algorithm chosen_signature_alg = S2N_SIGNATURE_RSA;
 
-    if(conn->actual_protocol_version == S2N_TLS12){
-        chosen_hash_alg = conn->secure.client_cert_hash_algorithm;
+    if (conn->actual_protocol_version == S2N_TLS12) {
+        chosen_hash_alg      = conn->secure.client_cert_hash_algorithm;
         chosen_signature_alg = conn->secure.client_cert_sig_alg;
 
-        GUARD(s2n_stuffer_write_uint8(out, (uint8_t) chosen_hash_alg));
-        GUARD(s2n_stuffer_write_uint8(out, (uint8_t) chosen_signature_alg));
+        GUARD(s2n_stuffer_write_uint8(out, (uint8_t)chosen_hash_alg));
+        GUARD(s2n_stuffer_write_uint8(out, (uint8_t)chosen_signature_alg));
     }
 
     struct s2n_hash_state hash_state;

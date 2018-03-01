@@ -13,10 +13,10 @@
  * permissions and limitations under the License.
  */
 
-#include <sys/param.h>
-#include <time.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/param.h>
+#include <time.h>
 
 #include "crypto/s2n_fips.h"
 
@@ -24,14 +24,14 @@
 
 #include "crypto/s2n_hash.h"
 
+#include "tls/s2n_alerts.h"
 #include "tls/s2n_cipher_preferences.h"
 #include "tls/s2n_cipher_suites.h"
-#include "tls/s2n_connection.h"
+#include "tls/s2n_client_extensions.h"
 #include "tls/s2n_client_hello.h"
-#include "tls/s2n_alerts.h"
+#include "tls/s2n_connection.h"
 #include "tls/s2n_signature_algorithms.h"
 #include "tls/s2n_tls.h"
-#include "tls/s2n_client_extensions.h"
 #include "tls/s2n_tls_digest_preferences.h"
 
 #include "stuffer/s2n_stuffer.h"
@@ -39,7 +39,8 @@
 #include "utils/s2n_random.h"
 #include "utils/s2n_safety.h"
 
-struct s2n_client_hello *s2n_connection_get_client_hello(struct s2n_connection *conn) {
+struct s2n_client_hello *s2n_connection_get_client_hello(struct s2n_connection *conn)
+{
     if (conn->client_hello.parsed != 1) {
         return NULL;
     }
@@ -47,11 +48,13 @@ struct s2n_client_hello *s2n_connection_get_client_hello(struct s2n_connection *
     return &conn->client_hello;
 }
 
-static uint32_t min_size(struct s2n_blob *blob, uint32_t max_length) {
+static uint32_t min_size(struct s2n_blob *blob, uint32_t max_length)
+{
     return blob->size < max_length ? blob->size : max_length;
 }
 
-uint32_t s2n_client_hello_get_raw_message_length(struct s2n_client_hello *ch) {
+uint32_t s2n_client_hello_get_raw_message_length(struct s2n_client_hello *ch)
+{
     notnull_check(ch);
 
     return ch->raw_message.blob.size;
@@ -71,7 +74,8 @@ uint32_t s2n_client_hello_get_raw_message(struct s2n_client_hello *ch, uint8_t *
     return len;
 }
 
-uint32_t s2n_client_hello_get_cipher_suites_length(struct s2n_client_hello *ch) {
+uint32_t s2n_client_hello_get_cipher_suites_length(struct s2n_client_hello *ch)
+{
     notnull_check(ch);
 
     return ch->cipher_suites.size;
@@ -90,7 +94,8 @@ uint32_t s2n_client_hello_get_cipher_suites(struct s2n_client_hello *ch, uint8_t
     return len;
 }
 
-uint32_t s2n_client_hello_get_extensions_length(struct s2n_client_hello *ch) {
+uint32_t s2n_client_hello_get_extensions_length(struct s2n_client_hello *ch)
+{
     notnull_check(ch);
 
     return ch->extensions.size;
@@ -119,7 +124,7 @@ int s2n_client_hello_free(struct s2n_client_hello *client_hello)
     /* These pointed to data in the raw_message stuffer,
        so we don't need to free them */
     client_hello->cipher_suites.data = NULL;
-    client_hello->extensions.data = NULL;
+    client_hello->extensions.data    = NULL;
 
     return 0;
 }
@@ -156,7 +161,7 @@ static int s2n_parse_client_hello(struct s2n_connection *conn)
 
     /* Going forward, we parse the collected client hello */
     struct s2n_client_hello *client_hello = &conn->client_hello;
-    struct s2n_stuffer *in = &client_hello->raw_message;
+    struct s2n_stuffer *in                = &client_hello->raw_message;
 
     uint8_t client_protocol_version[S2N_TLS_PROTOCOL_VERSION_LEN];
 
@@ -169,7 +174,7 @@ static int s2n_parse_client_hello(struct s2n_connection *conn)
         GUARD(s2n_queue_reader_unsupported_protocol_version_alert(conn));
         S2N_ERROR(S2N_ERR_BAD_MESSAGE);
     }
-    conn->client_hello_version = conn->client_protocol_version;
+    conn->client_hello_version    = conn->client_protocol_version;
     conn->actual_protocol_version = MIN(conn->client_protocol_version, conn->server_protocol_version);
 
     S2N_ERROR_IF(conn->session_id_len > S2N_TLS_SESSION_ID_MAX_LEN || conn->session_id_len > s2n_stuffer_data_available(in), S2N_ERR_BAD_MESSAGE);
@@ -236,8 +241,8 @@ static int s2n_process_client_hello(struct s2n_connection *conn)
 
 static int s2n_parsed_extensions_compare(const void *p, const void *q)
 {
-    const struct s2n_client_hello_parsed_extension *left = (const struct s2n_client_hello_parsed_extension *) p;
-    const struct s2n_client_hello_parsed_extension *right = (const struct s2n_client_hello_parsed_extension *) q;
+    const struct s2n_client_hello_parsed_extension *left  = (const struct s2n_client_hello_parsed_extension *)p;
+    const struct s2n_client_hello_parsed_extension *right = (const struct s2n_client_hello_parsed_extension *)q;
 
     return left->extension_type - right->extension_type;
 }
@@ -342,7 +347,7 @@ int s2n_client_hello_send(struct s2n_connection *conn)
     GUARD(s2n_stuffer_write_uint16(out, num_available_suites * S2N_TLS_CIPHER_SUITE_LEN));
 
     /* Now, write the IANA values every available cipher suite in our list */
-    for (int i = 0; i < conn->config->cipher_preferences->count; i++ ) {
+    for (int i = 0; i < conn->config->cipher_preferences->count; i++) {
         if (conn->config->cipher_preferences->suites[i]->available) {
             GUARD(s2n_stuffer_write_bytes(out, conn->config->cipher_preferences->suites[i]->iana_value, S2N_TLS_CIPHER_SUITE_LEN));
         }
@@ -378,7 +383,7 @@ int s2n_sslv2_client_hello_recv(struct s2n_connection *conn)
         S2N_ERROR(S2N_ERR_BAD_MESSAGE);
     }
     conn->actual_protocol_version = MIN(conn->client_protocol_version, conn->server_protocol_version);
-    conn->client_hello_version = S2N_SSLv2;
+    conn->client_hello_version    = S2N_SSLv2;
 
     /* We start 5 bytes into the record */
     GUARD(s2n_stuffer_read_uint16(in, &cipher_suites_length));
@@ -398,7 +403,7 @@ int s2n_sslv2_client_hello_recv(struct s2n_connection *conn)
     S2N_ERROR_IF(session_id_length > s2n_stuffer_data_available(in), S2N_ERR_BAD_MESSAGE);
     if (session_id_length > 0 && session_id_length <= S2N_TLS_SESSION_ID_MAX_LEN) {
         GUARD(s2n_stuffer_read_bytes(in, conn->session_id, session_id_length));
-        conn->session_id_len = (uint8_t) session_id_length;
+        conn->session_id_len = (uint8_t)session_id_length;
     } else {
         GUARD(s2n_stuffer_skip_read(in, session_id_length));
     }
@@ -424,7 +429,7 @@ static void *s2n_client_hello_get_parsed_extension(struct s2n_array *parsed_exte
     search.extension_type = extension_type;
 
     return bsearch(&search, parsed_extensions->elements, parsed_extensions->num_of_elements,
-            parsed_extensions->element_size, s2n_parsed_extensions_compare);
+        parsed_extensions->element_size, s2n_parsed_extensions_compare);
 }
 
 int s2n_client_hello_get_extension_length(struct s2n_client_hello *ch, s2n_tls_extension_type extension_type)

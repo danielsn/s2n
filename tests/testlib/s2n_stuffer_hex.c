@@ -32,8 +32,8 @@ static uint8_t hex[16] = {
  */
 static int s2n_stuffer_read_n_bits_hex(struct s2n_stuffer *stuffer, uint8_t n, uint64_t *u)
 {
-    uint8_t hex_data[16] = {0};
-    struct s2n_blob b = { .data = hex_data, .size = n / 4 };
+    uint8_t hex_data[16] = { 0 };
+    struct s2n_blob b = {.data = hex_data, .size = n / 4 };
 
     GUARD(s2n_stuffer_read(stuffer, &b));
 
@@ -126,7 +126,7 @@ int s2n_stuffer_read_uint8_hex(struct s2n_stuffer *stuffer, uint8_t *u)
 static int s2n_stuffer_write_n_bits_hex(struct s2n_stuffer *stuffer, uint8_t n, uint64_t u)
 {
     uint8_t hex_data[16] = { 0 };
-    struct s2n_blob b = { .data = hex_data, .size = n / 4 };
+    struct s2n_blob b = {.data = hex_data, .size = n / 4 };
 
     lte_check(n, 64);
 

@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "error/s2n_errno.h"
 
@@ -35,7 +35,7 @@ int s2n_stuffer_recv_from_fd(struct s2n_stuffer *stuffer, int rfd, uint32_t len)
     /* "undo" the skip write */
     stuffer->write_cursor -= len;
 
-  READ:
+READ:
     errno = 0;
     int r = read(rfd, stuffer->blob.data + stuffer->write_cursor, len);
     if (r < 0) {
@@ -60,7 +60,7 @@ int s2n_stuffer_send_to_fd(struct s2n_stuffer *stuffer, int wfd, uint32_t len)
     /* "undo" the skip read */
     stuffer->read_cursor -= len;
 
-  WRITE:
+WRITE:
     errno = 0;
     int w = write(wfd, stuffer->blob.data + stuffer->read_cursor, len);
     if (w < 0) {
@@ -93,7 +93,7 @@ int s2n_stuffer_alloc_ro_from_file(struct s2n_stuffer *stuffer, const char *file
 {
     int fd;
 
-  OPEN:
+OPEN:
     fd = open(file, O_RDONLY);
     if (fd < 0) {
         if (errno == EINTR) {

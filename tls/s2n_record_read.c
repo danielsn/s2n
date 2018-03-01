@@ -13,9 +13,9 @@
  * permissions and limitations under the License.
  */
 
-#include "crypto/s2n_sequence.h"
 #include "crypto/s2n_cipher.h"
 #include "crypto/s2n_hmac.h"
+#include "crypto/s2n_sequence.h"
 
 #include "error/s2n_errno.h"
 
@@ -26,14 +26,14 @@
 #include "tls/s2n_crypto.h"
 #include "tls/s2n_record_read.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_safety.h"
 
 int s2n_sslv2_record_header_parse(
     struct s2n_connection *conn,
-    uint8_t * record_type,
-    uint8_t * client_protocol_version,
-    uint16_t * fragment_length)
+    uint8_t *record_type,
+    uint8_t *client_protocol_version,
+    uint16_t *fragment_length)
 {
     struct s2n_stuffer *in = &conn->header_in;
 
@@ -56,8 +56,8 @@ int s2n_sslv2_record_header_parse(
 
 int s2n_record_header_parse(
     struct s2n_connection *conn,
-    uint8_t * content_type,
-    uint16_t * fragment_length)
+    uint8_t *content_type,
+    uint16_t *fragment_length)
 {
     struct s2n_stuffer *in = &conn->header_in;
 
@@ -93,17 +93,17 @@ int s2n_record_header_parse(
 int s2n_record_parse(struct s2n_connection *conn)
 {
     const struct s2n_cipher_suite *cipher_suite = conn->client->cipher_suite;
-    uint8_t *implicit_iv = conn->client->client_implicit_iv;
-    struct s2n_hmac_state *mac = &conn->client->client_record_mac;
-    uint8_t *sequence_number = conn->client->client_sequence_number;
-    struct s2n_session_key *session_key = &conn->client->client_key;
+    uint8_t *implicit_iv                        = conn->client->client_implicit_iv;
+    struct s2n_hmac_state *mac                  = &conn->client->client_record_mac;
+    uint8_t *sequence_number                    = conn->client->client_sequence_number;
+    struct s2n_session_key *session_key         = &conn->client->client_key;
 
     if (conn->mode == S2N_CLIENT) {
-        cipher_suite = conn->server->cipher_suite;
-        implicit_iv = conn->server->server_implicit_iv;
-        mac = &conn->server->server_record_mac;
+        cipher_suite    = conn->server->cipher_suite;
+        implicit_iv     = conn->server->server_implicit_iv;
+        mac             = &conn->server->server_record_mac;
         sequence_number = conn->server->server_sequence_number;
-        session_key = &conn->server->server_key;
+        session_key     = &conn->server->server_key;
     }
 
     uint8_t content_type;

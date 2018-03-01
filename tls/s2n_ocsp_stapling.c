@@ -26,7 +26,7 @@
 
 int s2n_server_status_send(struct s2n_connection *conn)
 {
-    GUARD(s2n_stuffer_write_uint8(&conn->handshake.io, (uint8_t) S2N_STATUS_REQUEST_OCSP));
+    GUARD(s2n_stuffer_write_uint8(&conn->handshake.io, (uint8_t)S2N_STATUS_REQUEST_OCSP));
     GUARD(s2n_stuffer_write_uint24(&conn->handshake.io, conn->config->cert_and_key_pairs->ocsp_status.size));
     GUARD(s2n_stuffer_write(&conn->handshake.io, &conn->config->cert_and_key_pairs->ocsp_status));
 
@@ -36,7 +36,7 @@ int s2n_server_status_send(struct s2n_connection *conn)
 int s2n_server_status_recv(struct s2n_connection *conn)
 {
     uint8_t type;
-    struct s2n_blob status = {.data = NULL,.size = 0 };
+    struct s2n_blob status = {.data = NULL, .size = 0 };
 
     GUARD(s2n_stuffer_read_uint8(&conn->handshake.io, &type));
     GUARD(s2n_stuffer_read_uint24(&conn->handshake.io, &status.size));
@@ -49,9 +49,8 @@ int s2n_server_status_recv(struct s2n_connection *conn)
         conn->status_response.size = status.size;
 
         return s2n_x509_validator_validate_cert_stapled_ocsp_response(&conn->x509_validator, conn,
-                                                                      conn->status_response.data, conn->status_response.size);
+            conn->status_response.data, conn->status_response.size);
     }
 
     return 0;
 }
-

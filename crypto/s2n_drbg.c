@@ -17,14 +17,14 @@
 
 #include <openssl/evp.h>
 
-#include "crypto/s2n_sequence.h"
 #include "crypto/s2n_drbg.h"
+#include "crypto/s2n_sequence.h"
 
-#include "utils/s2n_safety.h"
-#include "utils/s2n_random.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_random.h"
+#include "utils/s2n_safety.h"
 
-static int s2n_drbg_block_encrypt(EVP_CIPHER_CTX * ctx, uint8_t in[S2N_DRBG_BLOCK_SIZE], uint8_t out[S2N_DRBG_BLOCK_SIZE])
+static int s2n_drbg_block_encrypt(EVP_CIPHER_CTX *ctx, uint8_t in[S2N_DRBG_BLOCK_SIZE], uint8_t out[S2N_DRBG_BLOCK_SIZE])
 {
     int len = S2N_DRBG_BLOCK_SIZE;
     GUARD_OSSL(EVP_EncryptUpdate(ctx, out, &len, in, S2N_DRBG_BLOCK_SIZE), S2N_ERR_DRBG);
@@ -35,7 +35,7 @@ static int s2n_drbg_block_encrypt(EVP_CIPHER_CTX * ctx, uint8_t in[S2N_DRBG_BLOC
 
 static int s2n_drbg_bits(struct s2n_drbg *drbg, struct s2n_blob *out)
 {
-    struct s2n_blob value = {.data = drbg->v,.size = sizeof(drbg->v) };
+    struct s2n_blob value = {.data = drbg->v, .size = sizeof(drbg->v) };
     int block_aligned_size = out->size - (out->size % S2N_DRBG_BLOCK_SIZE);
 
     /* Per NIST SP800-90A 10.2.1.2: */
@@ -62,7 +62,7 @@ static int s2n_drbg_bits(struct s2n_drbg *drbg, struct s2n_blob *out)
 static int s2n_drbg_update(struct s2n_drbg *drbg, struct s2n_blob *provided_data)
 {
     uint8_t temp[32];
-    struct s2n_blob temp_blob = {.data = temp,.size = sizeof(temp) };
+    struct s2n_blob temp_blob = {.data = temp, .size = sizeof(temp) };
 
     eq_check(provided_data->size, sizeof(temp));
 
@@ -84,7 +84,7 @@ static int s2n_drbg_update(struct s2n_drbg *drbg, struct s2n_blob *provided_data
 int s2n_drbg_seed(struct s2n_drbg *drbg, struct s2n_blob *ps)
 {
     uint8_t seed[32];
-    struct s2n_blob blob = {.data = seed,.size = sizeof(seed) };
+    struct s2n_blob blob = {.data = seed, .size = sizeof(seed) };
     lte_check(ps->size, sizeof(seed));
 
     if (drbg->entropy_generator) {
@@ -107,9 +107,9 @@ int s2n_drbg_seed(struct s2n_drbg *drbg, struct s2n_blob *ps)
 
 int s2n_drbg_instantiate(struct s2n_drbg *drbg, struct s2n_blob *personalization_string)
 {
-    struct s2n_blob value = {.data = drbg->v,.size = sizeof(drbg->v) };
+    struct s2n_blob value = {.data = drbg->v, .size = sizeof(drbg->v) };
     uint8_t ps_prefix[32];
-    struct s2n_blob ps = {.data = ps_prefix,.size = sizeof(ps_prefix) };
+    struct s2n_blob ps = {.data = ps_prefix, .size = sizeof(ps_prefix) };
 
     /* Start off with zeroed data, per 10.2.1.3.1 item 4 */
     GUARD(s2n_blob_zero(&value));
@@ -139,7 +139,7 @@ int s2n_drbg_instantiate(struct s2n_drbg *drbg, struct s2n_blob *personalization
 int s2n_drbg_generate(struct s2n_drbg *drbg, struct s2n_blob *blob)
 {
     uint8_t all_zeros[32] = { 0 };
-    struct s2n_blob zeros = {.data = all_zeros,.size = sizeof(all_zeros) };
+    struct s2n_blob zeros = {.data = all_zeros, .size = sizeof(all_zeros) };
     S2N_ERROR_IF(blob->size > S2N_DRBG_GENERATE_LIMIT, S2N_ERR_DRBG_REQUEST_SIZE);
 
     /* If either the entropy generator is set, for prediction resistance,
@@ -157,7 +157,7 @@ int s2n_drbg_generate(struct s2n_drbg *drbg, struct s2n_blob *blob)
 
 int s2n_drbg_wipe(struct s2n_drbg *drbg)
 {
-    struct s2n_blob state = {.data = (void *)drbg,.size = sizeof(struct s2n_drbg) };
+    struct s2n_blob state = {.data = (void *)drbg, .size = sizeof(struct s2n_drbg) };
 
     if (drbg->ctx) {
         GUARD_OSSL(EVP_CIPHER_CTX_cleanup(drbg->ctx), S2N_ERR_DRBG);

@@ -20,16 +20,16 @@
 
 #include "error/s2n_errno.h"
 
+#include "tls/s2n_alerts.h"
 #include "tls/s2n_cipher_preferences.h"
 #include "tls/s2n_cipher_suites.h"
 #include "tls/s2n_connection.h"
-#include "tls/s2n_alerts.h"
 #include "tls/s2n_tls.h"
 
 #include "stuffer/s2n_stuffer.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_random.h"
+#include "utils/s2n_safety.h"
 
 /* From RFC5246 7.4.1.2. */
 #define S2N_TLS_COMPRESSION_METHOD_NULL 0
@@ -51,7 +51,7 @@ int s2n_server_hello_recv(struct s2n_connection *conn)
         GUARD(s2n_queue_reader_unsupported_protocol_version_alert(conn));
         S2N_ERROR(S2N_ERR_BAD_MESSAGE);
     }
-    conn->actual_protocol_version = MIN(conn->server_protocol_version, conn->client_protocol_version);
+    conn->actual_protocol_version             = MIN(conn->server_protocol_version, conn->client_protocol_version);
     conn->actual_protocol_version_established = 1;
 
     GUARD(s2n_stuffer_read_bytes(in, conn->secure.server_random, S2N_TLS_RANDOM_DATA_LEN));
@@ -113,7 +113,6 @@ int s2n_server_hello_send(struct s2n_connection *conn)
 
     protocol_version[0] = (uint8_t)(conn->actual_protocol_version / 10);
     protocol_version[1] = (uint8_t)(conn->actual_protocol_version % 10);
-
 
     GUARD(s2n_stuffer_write_bytes(out, protocol_version, S2N_TLS_PROTOCOL_VERSION_LEN));
     GUARD(s2n_stuffer_write_bytes(out, conn->secure.server_random, S2N_TLS_RANDOM_DATA_LEN));

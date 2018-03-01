@@ -64,7 +64,7 @@ static const uint8_t b64_inverse[256] = {
 
 int s2n_is_base64_char(char c)
 {
-    return (b64_inverse[(uint8_t) c] != 255);
+    return (b64_inverse[(uint8_t)c] != 255);
 }
 
 /**
@@ -76,7 +76,7 @@ int s2n_stuffer_read_base64(struct s2n_stuffer *stuffer, struct s2n_stuffer *out
 {
     uint8_t pad[4];
     int bytes_this_round = 3;
-    struct s2n_blob o = {.data = pad,.size = sizeof(pad) };
+    struct s2n_blob o = {.data = pad, .size = sizeof(pad) };
 
     do {
         if (s2n_stuffer_data_available(stuffer) < 4) {
@@ -108,14 +108,14 @@ int s2n_stuffer_read_base64(struct s2n_stuffer *stuffer, struct s2n_stuffer *out
              */
             S2N_ERROR_IF(o.data[3] != '=' || value2 & 0x0f, S2N_ERR_INVALID_BASE64);
             bytes_this_round = 1;
-            value3 = 0;
-            value4 = 0;
+            value3           = 0;
+            value4           = 0;
         } else if (o.data[3] == '=') {
             /* The last two bits of the final value should be unset */
             S2N_ERROR_IF(value3 & 0x03, S2N_ERR_INVALID_BASE64);
 
             bytes_this_round = 2;
-            value4 = 0;
+            value4           = 0;
         }
 
         /* value1 maps to the first 6 bits of the first data byte */
@@ -146,8 +146,8 @@ int s2n_stuffer_write_base64(struct s2n_stuffer *stuffer, struct s2n_stuffer *in
 {
     uint8_t outpad[4];
     uint8_t inpad[3];
-    struct s2n_blob o = {.data = outpad,.size = sizeof(outpad) };
-    struct s2n_blob i = {.data = inpad,.size = sizeof(inpad) };
+    struct s2n_blob o = {.data = outpad, .size = sizeof(outpad) };
+    struct s2n_blob i = {.data = inpad, .size = sizeof(inpad) };
 
     while (s2n_stuffer_data_available(in) > 2) {
         GUARD(s2n_stuffer_read(in, &i));

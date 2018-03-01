@@ -15,9 +15,9 @@
 
 #include "s2n_test.h"
 
-#include <sys/wait.h>
 #include <pthread.h>
 #include <s2n.h>
+#include <sys/wait.h>
 
 #include "utils/s2n_random.h"
 
@@ -25,7 +25,7 @@ static uint8_t thread_data[2][100];
 
 void *thread_safety_tester(void *slot)
 {
-    intptr_t slotnum = (intptr_t) slot;
+    intptr_t slotnum     = (intptr_t)slot;
     struct s2n_blob blob = {.data = thread_data[slotnum], .size = 100 };
 
     s2n_get_public_random_data(&blob);
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
         /* A common mistake in array filling leaves the last bytes zero
          * depending on the length.
          */
-        int remainder = i % 8;
+        int remainder      = i % 8;
         int non_zero_found = 0;
         for (int t = i - remainder; t < i; t++) {
             non_zero_found |= data[t];
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
         /* A common mistake in array filling leaves the last bytes zero
          * depending on the length.
          */
-        int remainder = i % 8;
+        int remainder      = i % 8;
         int non_zero_found = 0;
         for (int t = i - remainder; t < i; t++) {
             non_zero_found |= data[t];
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
         /* A common mistake in array filling leaves the last bytes zero
          * depending on the length.
          */
-        int remainder = i % 8;
+        int remainder      = i % 8;
         int non_zero_found = 0;
         for (int t = i - remainder; t < i; t++) {
             non_zero_found |= data[t];
@@ -295,17 +295,17 @@ int main(int argc, char **argv)
             /* A common mistake in array filling leaves the last bytes zero
              * depending on the length
              */
-            int remainder = i % 8;
+            int remainder      = i % 8;
             int non_zero_found = 0;
             for (int t = i - remainder; t < i; t++) {
-              non_zero_found |= data[t];
+                non_zero_found |= data[t];
             }
             if (!non_zero_found) {
-              trailing_zeros[remainder]++;
+                trailing_zeros[remainder]++;
             }
         }
         for (int t = 1; t < 8; t++) {
-          EXPECT_TRUE(trailing_zeros[t] < 5120 / 16);
+            EXPECT_TRUE(trailing_zeros[t] < 5120 / 16);
         }
     }
 

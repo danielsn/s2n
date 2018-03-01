@@ -86,13 +86,7 @@ fuzz-linux : bin
 
 .PHONY : indent
 indent:
-	$(MAKE) -C tests indentsource
-	$(MAKE) -C stuffer indentsource
-	$(MAKE) -C crypto indentsource
-	$(MAKE) -C utils indentsource
-	$(MAKE) -C error indentsource
-	$(MAKE) -C tls indentsource
-	$(MAKE) -C bin indentsource
+	find . -name "*.c" | xargs clang-format-3.8 -i 
 
 .PHONY : pre_commit_check
 pre_commit_check: all indent clean

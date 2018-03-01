@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
-#define _GNU_SOURCE             /* For syscall on Linux */
-#undef _POSIX_C_SOURCE          /* For syscall() on Mac OS X */
+#define _GNU_SOURCE    /* For syscall on Linux */
+#undef _POSIX_C_SOURCE /* For syscall() on Mac OS X */
 
-#include <unistd.h>
+#include <stdint.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
-#include <stdint.h>
+#include <unistd.h>
 
 #include "s2n_annotations.h"
 
@@ -33,7 +33,7 @@ pid_t s2n_actual_getpid()
 {
 #if defined(__GNUC__) && defined(SYS_getpid)
     /* http://yarchive.net/comp/linux/getpid_caching.html */
-    return (pid_t) syscall(SYS_getpid);
+    return (pid_t)syscall(SYS_getpid);
 #else
     return getpid();
 #endif
@@ -53,21 +53,21 @@ pid_t s2n_actual_getpid()
  * Returns:
  *  Whether all bytes in arrays "a" and "b" are identical
  */
-int s2n_constant_time_equals(const uint8_t * a, const uint8_t * b, uint32_t len)
+int s2n_constant_time_equals(const uint8_t *a, const uint8_t *b, uint32_t len)
 {
     S2N_PUBLIC_INPUT(a);
     S2N_PUBLIC_INPUT(b);
     S2N_PUBLIC_INPUT(len);
-    
+
     uint8_t xor = 0;
     for (int i = 0; i < len; i++) {
         /* Invariants must hold for each execution of the loop
-	 * and at loop exit, hence the <= */ 
+	 * and at loop exit, hence the <= */
         S2N_INVARIENT(i <= len);
         xor |= a[i] ^ b[i];
     }
 
-    return !xor;
+    return ! xor ;
 }
 
 /**
@@ -80,21 +80,21 @@ int s2n_constant_time_equals(const uint8_t * a, const uint8_t * b, uint32_t len)
  * will affect the timing of this function).
  *
  */
-int s2n_constant_time_copy_or_dont(uint8_t * dest, const uint8_t * src, uint32_t len, uint8_t dont)
+int s2n_constant_time_copy_or_dont(uint8_t *dest, const uint8_t *src, uint32_t len, uint8_t dont)
 {
     S2N_PUBLIC_INPUT(dest);
     S2N_PUBLIC_INPUT(src);
     S2N_PUBLIC_INPUT(len);
-    
-    uint8_t mask = ((uint_fast16_t)((uint_fast16_t)(dont) - 1)) >> 8;
+
+    uint8_t mask = ((uint_fast16_t)((uint_fast16_t)(dont)-1)) >> 8;
 
     /* dont = 0 : mask = 0xff */
     /* dont > 0 : mask = 0x00 */
 
     for (int i = 0; i < len; i++) {
-        uint8_t old = dest[i];
+        uint8_t old  = dest[i];
         uint8_t diff = (old ^ src[i]) & mask;
-        dest[i] = old ^ diff;
+        dest[i]      = old ^ diff;
     }
 
     return 0;

@@ -12,11 +12,11 @@
  * express or implied. See the License for the specific language governing
  * permissions and limitations under the License.
  */
+#include "utils/s2n_array.h"
 #include "s2n_test.h"
 #include "utils/s2n_blob.h"
 #include "utils/s2n_mem.h"
 #include "utils/s2n_safety.h"
-#include "utils/s2n_array.h"
 
 int main(int argc, char **argv)
 {
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 
     struct s2n_array *array;
     int num_of_elements = 17;
-    int element_size = sizeof(struct array_element);
+    int element_size    = sizeof(struct array_element);
 
     BEGIN_TEST();
 
@@ -35,10 +35,10 @@ int main(int argc, char **argv)
     GUARD(s2n_alloc(&mem, sizeof(struct array_element) * num_of_elements));
     GUARD(s2n_blob_zero(&mem));
 
-    struct array_element *elements = (struct  array_element *) (void *) mem.data;
+    struct array_element *elements = (struct array_element *)(void *)mem.data;
 
     for (int i = 0; i < num_of_elements; i++) {
-        elements[i].first = i;
+        elements[i].first  = i;
         elements[i].second = 'a' + i;
     }
 
@@ -58,8 +58,8 @@ int main(int argc, char **argv)
 
     /* Add an element */
     struct array_element *element = s2n_array_add(array);
-    element->first = elements[0].first;
-    element->second = elements[0].second;
+    element->first                = elements[0].first;
+    element->second               = elements[0].second;
 
     /* Validate array parameters */
     EXPECT_EQUAL(array->capacity, 16);
@@ -77,8 +77,8 @@ int main(int argc, char **argv)
     /* Add more than 16 elements */
     for (int i = 1; i < num_of_elements; i++) {
         struct array_element *elem = s2n_array_add(array);
-        elem->first = elements[i].first;
-        elem->second = elements[i].second;
+        elem->first                = elements[i].first;
+        elem->second               = elements[i].second;
     }
 
     /* Validate array parameters again */

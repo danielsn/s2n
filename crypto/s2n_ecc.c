@@ -15,29 +15,29 @@
 
 #include "crypto/s2n_ecc.h"
 
-#include <openssl/ec.h>
 #include <openssl/bn.h>
+#include <openssl/ec.h>
 #include <openssl/ecdh.h>
 #include <openssl/obj_mac.h>
 #include <stdint.h>
 
 #include "tls/s2n_tls_parameters.h"
-#include "utils/s2n_safety.h"
 #include "utils/s2n_mem.h"
+#include "utils/s2n_safety.h"
 
 #define TLS_EC_CURVE_TYPE_NAMED 3
 
 const struct s2n_ecc_named_curve s2n_ecc_supported_curves[2] = {
-    {.iana_id = TLS_EC_CURVE_SECP_256_R1, .libcrypto_nid = NID_X9_62_prime256v1, .name = "secp256r1"},
-    {.iana_id = TLS_EC_CURVE_SECP_384_R1, .libcrypto_nid = NID_secp384r1, .name= "secp384r1"},
+    {.iana_id = TLS_EC_CURVE_SECP_256_R1, .libcrypto_nid = NID_X9_62_prime256v1, .name = "secp256r1" },
+    {.iana_id = TLS_EC_CURVE_SECP_384_R1, .libcrypto_nid = NID_secp384r1, .name = "secp384r1" },
 };
 
 static EC_KEY *s2n_ecc_generate_own_key(const struct s2n_ecc_named_curve *named_curve);
-static EC_POINT *s2n_ecc_blob_to_point(struct s2n_blob *blob, const EC_KEY * ec_key);
-static int s2n_ecc_calculate_point_length(const EC_POINT * point, const EC_GROUP * group, uint8_t * length);
-static int s2n_ecc_write_point_data_snug(const EC_POINT * point, const EC_GROUP * group, struct s2n_blob *out);
-static int s2n_ecc_write_point_with_length(const EC_POINT * point, const EC_GROUP * group, struct s2n_stuffer *out);
-static int s2n_ecc_compute_shared_secret(EC_KEY * own_key, const EC_POINT * peer_public, struct s2n_blob *shared_secret);
+static EC_POINT *s2n_ecc_blob_to_point(struct s2n_blob *blob, const EC_KEY *ec_key);
+static int s2n_ecc_calculate_point_length(const EC_POINT *point, const EC_GROUP *group, uint8_t *length);
+static int s2n_ecc_write_point_data_snug(const EC_POINT *point, const EC_GROUP *group, struct s2n_blob *out);
+static int s2n_ecc_write_point_with_length(const EC_POINT *point, const EC_GROUP *group, struct s2n_stuffer *out);
+static int s2n_ecc_compute_shared_secret(EC_KEY *own_key, const EC_POINT *peer_public, struct s2n_blob *shared_secret);
 
 int s2n_ecc_generate_ephemeral_key(struct s2n_ecc_params *server_ecc_params)
 {
@@ -189,10 +189,10 @@ static EC_KEY *s2n_ecc_generate_own_key(const struct s2n_ecc_named_curve *named_
     return key;
 }
 
-static EC_POINT *s2n_ecc_blob_to_point(struct s2n_blob *blob, const EC_KEY * ec_key)
+static EC_POINT *s2n_ecc_blob_to_point(struct s2n_blob *blob, const EC_KEY *ec_key)
 {
     const EC_GROUP *group = EC_KEY_get0_group(ec_key);
-    EC_POINT *point = EC_POINT_new(group);
+    EC_POINT *point       = EC_POINT_new(group);
     if (point == NULL) {
         S2N_ERROR_PTR(S2N_ERR_ECDHE_UNSUPPORTED_CURVE);
     }
@@ -203,23 +203,23 @@ static EC_POINT *s2n_ecc_blob_to_point(struct s2n_blob *blob, const EC_KEY * ec_
     return point;
 }
 
-static int s2n_ecc_calculate_point_length(const EC_POINT * point, const EC_GROUP * group, uint8_t * length)
+static int s2n_ecc_calculate_point_length(const EC_POINT *point, const EC_GROUP *group, uint8_t *length)
 {
     size_t ret = EC_POINT_point2oct(group, point, POINT_CONVERSION_UNCOMPRESSED, NULL, 0, NULL);
     S2N_ERROR_IF(ret == 0, S2N_ERR_ECDHE_SERIALIZING);
     S2N_ERROR_IF(ret > UINT8_MAX, S2N_ERR_ECDHE_SERIALIZING);
-    *length = (uint8_t) ret;
+    *length = (uint8_t)ret;
     return 0;
 }
 
-static int s2n_ecc_write_point_data_snug(const EC_POINT * point, const EC_GROUP * group, struct s2n_blob *out)
+static int s2n_ecc_write_point_data_snug(const EC_POINT *point, const EC_GROUP *group, struct s2n_blob *out)
 {
     size_t ret = EC_POINT_point2oct(group, point, POINT_CONVERSION_UNCOMPRESSED, out->data, out->size, NULL);
     S2N_ERROR_IF(ret != out->size, S2N_ERR_ECDHE_SERIALIZING);
     return 0;
 }
 
-static int s2n_ecc_write_point_with_length(const EC_POINT * point, const EC_GROUP * group, struct s2n_stuffer *out)
+static int s2n_ecc_write_point_with_length(const EC_POINT *point, const EC_GROUP *group, struct s2n_stuffer *out)
 {
     uint8_t point_len;
     struct s2n_blob point_blob;
@@ -237,7 +237,7 @@ static int s2n_ecc_write_point_with_length(const EC_POINT * point, const EC_GROU
     return 0;
 }
 
-static int s2n_ecc_compute_shared_secret(EC_KEY * own_key, const EC_POINT * peer_public, struct s2n_blob *shared_secret)
+static int s2n_ecc_compute_shared_secret(EC_KEY *own_key, const EC_POINT *peer_public, struct s2n_blob *shared_secret)
 {
     int field_degree;
     int shared_secret_size;

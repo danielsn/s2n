@@ -19,8 +19,8 @@
 
 #include "crypto/s2n_cipher.h"
 
-#include "utils/s2n_safety.h"
 #include "utils/s2n_blob.h"
+#include "utils/s2n_safety.h"
 
 static uint8_t s2n_cbc_cipher_aes128_available()
 {
@@ -113,30 +113,30 @@ static int s2n_cbc_cipher_aes_destroy_key(struct s2n_session_key *key)
 
 struct s2n_cipher s2n_aes128 = {
     .key_material_size = 16,
-    .type = S2N_CBC,
-    .io.cbc = {
-               .block_size = 16,
-               .record_iv_size = 16,
-               .decrypt = s2n_cbc_cipher_aes_decrypt,
-               .encrypt = s2n_cbc_cipher_aes_encrypt},
-    .is_available = s2n_cbc_cipher_aes128_available,
-    .init = s2n_cbc_cipher_aes_init,
+    .type              = S2N_CBC,
+    .io.cbc            = {
+        .block_size     = 16,
+        .record_iv_size = 16,
+        .decrypt        = s2n_cbc_cipher_aes_decrypt,
+        .encrypt        = s2n_cbc_cipher_aes_encrypt },
+    .is_available       = s2n_cbc_cipher_aes128_available,
+    .init               = s2n_cbc_cipher_aes_init,
     .set_decryption_key = s2n_cbc_cipher_aes128_set_decryption_key,
     .set_encryption_key = s2n_cbc_cipher_aes128_set_encryption_key,
-    .destroy_key = s2n_cbc_cipher_aes_destroy_key,
+    .destroy_key        = s2n_cbc_cipher_aes_destroy_key,
 };
 
 struct s2n_cipher s2n_aes256 = {
     .key_material_size = 32,
-    .type = S2N_CBC,
-    .io.cbc = {
-               .block_size = 16,
-               .record_iv_size = 16,
-               .decrypt = s2n_cbc_cipher_aes_decrypt,
-               .encrypt = s2n_cbc_cipher_aes_encrypt},
-    .is_available = s2n_cbc_cipher_aes256_available,
-    .init = s2n_cbc_cipher_aes_init,
+    .type              = S2N_CBC,
+    .io.cbc            = {
+        .block_size     = 16,
+        .record_iv_size = 16,
+        .decrypt        = s2n_cbc_cipher_aes_decrypt,
+        .encrypt        = s2n_cbc_cipher_aes_encrypt },
+    .is_available       = s2n_cbc_cipher_aes256_available,
+    .init               = s2n_cbc_cipher_aes_init,
     .set_decryption_key = s2n_cbc_cipher_aes256_set_decryption_key,
     .set_encryption_key = s2n_cbc_cipher_aes256_set_encryption_key,
-    .destroy_key = s2n_cbc_cipher_aes_destroy_key,
+    .destroy_key        = s2n_cbc_cipher_aes_destroy_key,
 };

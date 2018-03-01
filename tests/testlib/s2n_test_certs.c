@@ -13,8 +13,8 @@
  * permissions and limitations under the License.
  */
 
-#include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "error/s2n_errno.h"
 
@@ -50,4 +50,3 @@ int s2n_read_test_pem(const char *pem_path, char *pem_out, long int max_size)
 
     return 0;
 }
-

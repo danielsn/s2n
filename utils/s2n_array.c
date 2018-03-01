@@ -24,7 +24,7 @@ static int s2n_array_enlarge(struct s2n_array *array, uint32_t capacity)
     notnull_check(array);
     size_t array_elements_size = array->element_size * array->num_of_elements;
 
-    struct s2n_blob mem = {.data = array->elements, .size = array_elements_size, .allocated = array_elements_size};
+    struct s2n_blob mem = {.data = array->elements, .size = array_elements_size, .allocated = array_elements_size };
 
     GUARD(s2n_realloc(&mem, array->element_size * capacity));
 
@@ -33,7 +33,7 @@ static int s2n_array_enlarge(struct s2n_array *array, uint32_t capacity)
 
     /* Update array capacity and elements */
     array->capacity = capacity;
-    array->elements = (void *) mem.data;
+    array->elements = (void *)mem.data;
 
     return 0;
 }
@@ -45,11 +45,11 @@ struct s2n_array *s2n_array_new(size_t element_size)
 
     GUARD_PTR(s2n_alloc(&mem, sizeof(struct s2n_array)));
 
-    array = (void *) mem.data;
-    array->capacity = 0;
+    array                  = (void *)mem.data;
+    array->capacity        = 0;
     array->num_of_elements = 0;
-    array->element_size = element_size;
-    array->elements = NULL;
+    array->element_size    = element_size;
+    array->elements        = NULL;
 
     GUARD_PTR(s2n_array_enlarge(array, S2N_INITIAL_ARRAY_SIZE));
 
@@ -67,7 +67,7 @@ void *s2n_array_add(struct s2n_array *array)
         GUARD_PTR(s2n_array_enlarge(array, array->capacity * 2));
     }
 
-    void *element = (uint8_t *) array->elements + array->element_size * array->num_of_elements;
+    void *element = (uint8_t *)array->elements + array->element_size * array->num_of_elements;
     array->num_of_elements++;
 
     return element;
@@ -82,7 +82,7 @@ void *s2n_array_get(struct s2n_array *array, uint32_t index)
     void *element = NULL;
 
     if (index < array->num_of_elements) {
-        element = (uint8_t *) array->elements + array->element_size * index;
+        element = (uint8_t *)array->elements + array->element_size * index;
     }
 
     return element;
@@ -94,12 +94,12 @@ int s2n_array_free(struct s2n_array *array)
     struct s2n_blob mem;
 
     /* Free the elements */
-    mem.data = (void *) array->elements;
+    mem.data = (void *)array->elements;
     mem.size = array->capacity * array->element_size;
     GUARD(s2n_free(&mem));
 
     /* And finally the array */
-    mem.data = (void *) array;
+    mem.data = (void *)array;
     mem.size = sizeof(struct s2n_array);
     GUARD(s2n_free(&mem));
 

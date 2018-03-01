@@ -17,9 +17,9 @@
 
 #include "testlib/s2n_testlib.h"
 
+#include <stdint.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <stdint.h>
 
 #include <s2n.h>
 
@@ -41,7 +41,7 @@ void mock_client(int writefd, int readfd)
     /* Give the server a chance to listen */
     sleep(1);
 
-    conn = s2n_connection_new(S2N_CLIENT);
+    conn   = s2n_connection_new(S2N_CLIENT);
     config = s2n_config_new();
     s2n_config_disable_x509_verification(config);
     s2n_connection_set_config(conn, config);
@@ -63,7 +63,7 @@ void mock_client(int writefd, int readfd)
     }
 
     int shutdown_rc = -1;
-    while(shutdown_rc != 0) {
+    while (shutdown_rc != 0) {
         shutdown_rc = s2n_shutdown(conn, &blocked);
     }
 
@@ -143,8 +143,8 @@ int main(int argc, char **argv)
 
             char buffer[0xffff];
             for (int i = 1; i < 0xffff; i += 100) {
-                char * ptr = buffer;
-                int size = i;
+                char *ptr = buffer;
+                int size  = i;
 
                 do {
                     int bytes_read = 0;
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 
                     size -= bytes_read;
                     ptr += bytes_read;
-                } while(size);
+                } while (size);
 
                 for (int j = 0; j < i; j++) {
                     EXPECT_EQUAL(buffer[j], 33);
@@ -163,7 +163,7 @@ int main(int argc, char **argv)
             do {
                 shutdown_rc = s2n_shutdown(conn, &blocked);
                 EXPECT_TRUE(shutdown_rc == 0 || (errno == EAGAIN && blocked));
-            } while(shutdown_rc != 0);
+            } while (shutdown_rc != 0);
 
             EXPECT_SUCCESS(s2n_connection_free(conn));
 

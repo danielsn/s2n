@@ -20,16 +20,16 @@
 #include "crypto/s2n_hmac.h"
 
 #include "utils/s2n_blob.h"
-#include "utils/s2n_safety.h"
 #include "utils/s2n_mem.h"
+#include "utils/s2n_safety.h"
 
-#define MAX_DIGEST_SIZE 64      /* Current highest is SHA512 */
+#define MAX_DIGEST_SIZE 64 /* Current highest is SHA512 */
 #define MAX_HKDF_ROUNDS 255
 
 /* Reference: RFC 5869 */
 
 int s2n_hkdf_extract(struct s2n_hmac_state *hmac, s2n_hmac_algorithm alg, const struct s2n_blob *salt,
-                     const struct s2n_blob *key, struct s2n_blob *pseudo_rand_key)
+    const struct s2n_blob *key, struct s2n_blob *pseudo_rand_key)
 {
     uint8_t hmac_size;
     GUARD(s2n_hmac_digest_size(alg, &hmac_size));
@@ -44,7 +44,7 @@ int s2n_hkdf_extract(struct s2n_hmac_state *hmac, s2n_hmac_algorithm alg, const 
 }
 
 static int s2n_hkdf_expand(struct s2n_hmac_state *hmac, s2n_hmac_algorithm alg, const struct s2n_blob *pseudo_rand_key,
-                           const struct s2n_blob *info, struct s2n_blob *output)
+    const struct s2n_blob *info, struct s2n_blob *output)
 {
     uint8_t prev[MAX_DIGEST_SIZE] = { 0 };
 
@@ -76,7 +76,7 @@ static int s2n_hkdf_expand(struct s2n_hmac_state *hmac, s2n_hmac_algorithm alg, 
         memcpy_check(output->data + done_len, prev, cat_len);
 
         done_len += cat_len;
-    
+
         GUARD(s2n_hmac_reset(hmac));
     }
 
@@ -84,10 +84,10 @@ static int s2n_hkdf_expand(struct s2n_hmac_state *hmac, s2n_hmac_algorithm alg, 
 }
 
 int s2n_hkdf(struct s2n_hmac_state *hmac, s2n_hmac_algorithm alg, const struct s2n_blob *salt,
-             const struct s2n_blob *key, const struct s2n_blob *info, struct s2n_blob *output)
+    const struct s2n_blob *key, const struct s2n_blob *info, struct s2n_blob *output)
 {
     uint8_t prk_pad[MAX_DIGEST_SIZE];
-    struct s2n_blob pseudo_rand_key = {.data = prk_pad,.size = sizeof(prk_pad) };
+    struct s2n_blob pseudo_rand_key = {.data = prk_pad, .size = sizeof(prk_pad) };
 
     GUARD(s2n_hkdf_extract(hmac, alg, salt, key, &pseudo_rand_key));
     GUARD(s2n_hkdf_expand(hmac, alg, &pseudo_rand_key, info, output));
