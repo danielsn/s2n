@@ -189,6 +189,7 @@ struct s2n_error_translation S2N_ERROR_EN[] = {
     ERROR_STRING(S2N_ERR_POLLING_FROM_SOCKET, "Error polling from socket")
     ERROR_STRING(S2N_ERR_RECV_STUFFER_FROM_CONN, "Error receiving stuffer from connection")
     ERROR_STRING(S2N_ERR_SEND_STUFFER_TO_CONN, "Error sending stuffer to connection")
+    ERROR_STRING(S2N_ERR_PRECONDITION_VIOLATION, "Internal precondition violation")
 };
 const int num_of_errors = sizeof(S2N_ERROR_EN) / sizeof(S2N_ERROR_EN[0]);
 static struct s2n_map *error_translation_table = NULL;
