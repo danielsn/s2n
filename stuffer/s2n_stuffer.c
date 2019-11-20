@@ -25,18 +25,32 @@
 
 bool s2n_stuffer_is_valid(const struct s2n_stuffer* stuffer)
 {
-    return S2N_OBJECT_PTR_IS_READABLE(stuffer) && 
+  struct s2n_stuffer debug = *stuffer;
+  bool va= S2N_OBJECT_PTR_IS_READABLE(stuffer);
+  bool vb= s2n_blob_is_valid(&stuffer->blob);
+  /* <= is valid because we can have a fully written/read stuffer */
+  bool vc = stuffer->read_cursor <= stuffer->blob.size;
+  bool vd = stuffer->write_cursor <= stuffer->blob.size;
+  bool ve =   stuffer->write_cursor >= stuffer->read_cursor;
+  return va && vb && vc && vd && ve;
+  /*
+  return S2N_OBJECT_PTR_IS_READABLE(stuffer) && 
     s2n_blob_is_valid(&stuffer->blob) &&
     stuffer->read_cursor < stuffer->blob.size &&
     stuffer->write_cursor < stuffer->blob.size &&
     stuffer->write_cursor >= stuffer->read_cursor;
+  */
     /*any combination of wiped, alloced, growable, and tainted are valid */
 }
 
 int s2n_stuffer_init(struct s2n_stuffer *stuffer, struct s2n_blob *in)
 {
     S2N_PRECONDITION(s2n_blob_is_valid(in));
+    bool init_a = s2n_blob_is_valid(in);
+    struct s2n_blob val = *in;
     stuffer->blob = *in;
+    bool init_b = s2n_blob_is_valid(&stuffer->blob);
+
     stuffer->wiped = 1;
     stuffer->alloced = 0;
     stuffer->growable = 0;

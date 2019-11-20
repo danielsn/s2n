@@ -15,10 +15,14 @@
 
 #include "api/s2n.h"
 #include "stuffer/s2n_stuffer.h"
+#include <assert.h>
 #include <cbmc_proof/proof_allocators.h>
 
 void s2n_stuffer_init_harness() {
   struct s2n_stuffer *stuffer = malloc(sizeof(*stuffer));
   struct s2n_blob *in = malloc(sizeof(*in));
-  int result = s2n_stuffer_init(stuffer, in);
+  if (s2n_stuffer_init(stuffer, in) == S2N_SUCCESS){
+    assert(s2n_stuffer_is_valid(stuffer));
+    assert(s2n_blob_is_valid(in));
+  };
 }
