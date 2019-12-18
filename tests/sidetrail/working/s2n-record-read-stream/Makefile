@@ -7,6 +7,7 @@ cflags += -I$(CURDIR)
 cflags += -I$(CURDIR)/../../../../
 #/api .h that haven't fixed that
 cflags += -I$(CURDIR)/../../../../api/
+cflags += -I/usr/local/Cellar/openssl@1.1/1.1.1d/include
 cflags += -fPIC -std=c99 -fgnu89-inline
 extras += crypto/s2n_hash.c
 extras += crypto/s2n_hmac.c
