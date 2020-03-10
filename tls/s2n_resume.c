@@ -197,10 +197,7 @@ int s2n_resume_from_cache(struct s2n_connection *conn)
 {
     S2N_ERROR_IF(conn->session_id_len == 0, S2N_ERR_SESSION_ID_TOO_SHORT);
     S2N_ERROR_IF(conn->session_id_len > S2N_TLS_SESSION_ID_MAX_LEN, S2N_ERR_SESSION_ID_TOO_LONG);
-
-    uint8_t data[S2N_TICKET_SIZE_IN_BYTES] = { 0 };
-    struct s2n_blob entry = {0};
-    GUARD(s2n_blob_init(&entry, data, S2N_TICKET_SIZE_IN_BYTES));
+    S2N_STACK_BLOB(entry, S2N_TICKET_SIZE_IN_BYTES);
     uint64_t size = entry.size;
     GUARD_NONBLOCKING(conn->config->cache_retrieve(conn, conn->config->cache_retrieve_data, conn->session_id, conn->session_id_len, entry.data, &size));
 

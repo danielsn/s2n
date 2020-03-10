@@ -146,14 +146,14 @@ static int s2n_connection_init_hmacs(struct s2n_connection *conn)
 
 struct s2n_connection *s2n_connection_new(s2n_mode mode)
 {
-    struct s2n_blob blob = {0};
-    GUARD_PTR(s2n_alloc(&blob, sizeof(struct s2n_connection)));
-    GUARD_PTR(s2n_blob_zero(&blob));
+    struct s2n_blob connection_blob = {0};
+    GUARD_PTR(s2n_alloc(&connection_blob, sizeof(struct s2n_connection)));
+    GUARD_PTR(s2n_blob_zero(&connection_blob));
 
     /* Cast 'through' void to acknowledge that we are changing alignment,
      * which is ok, as blob.data is always aligned.
      */
-    struct s2n_connection* conn = (struct s2n_connection *)(void *)blob.data;
+    struct s2n_connection* conn = (struct s2n_connection *)(void *)connection_blob.data;
 
     GUARD_PTR(s2n_connection_set_config(conn, s2n_fetch_default_config()));
 
@@ -178,21 +178,17 @@ struct s2n_connection *s2n_connection_new(s2n_mode mode)
     conn->session_ticket_status = S2N_NO_TICKET;
 
     /* Allocate the fixed-size stuffers */
-    blob = (struct s2n_blob) {0};
-    GUARD_PTR(s2n_blob_init(&blob, conn->alert_in_data, S2N_ALERT_LENGTH));
-    GUARD_PTR(s2n_stuffer_init(&conn->alert_in, &blob));
+    S2N_BLOB_FROM_DATA_PTR(alert_in, conn->alert_in_data, S2N_ALERT_LENGTH);
+    GUARD_PTR(s2n_stuffer_init(&conn->alert_in, &alert_in));
 
-    blob = (struct s2n_blob) {0};
-    GUARD_PTR(s2n_blob_init(&blob, conn->reader_alert_out_data, S2N_ALERT_LENGTH));
-    GUARD_PTR(s2n_stuffer_init(&conn->reader_alert_out, &blob));
+    S2N_BLOB_FROM_DATA_PTR(reader_alert_out, conn->reader_alert_out_data, S2N_ALERT_LENGTH);
+    GUARD_PTR(s2n_stuffer_init(&conn->reader_alert_out, &reader_alert_out));
 
-    blob = (struct s2n_blob) {0};
-    GUARD_PTR(s2n_blob_init(&blob, conn->writer_alert_out_data, S2N_ALERT_LENGTH));
-    GUARD_PTR(s2n_stuffer_init(&conn->writer_alert_out, &blob));
+    S2N_BLOB_FROM_DATA_PTR(writer_alert_out, conn->writer_alert_out_data, S2N_ALERT_LENGTH);
+    GUARD_PTR(s2n_stuffer_init(&conn->writer_alert_out, &writer_alert_out));
 
-    blob = (struct s2n_blob) {0};
-    GUARD_PTR(s2n_blob_init(&blob, conn->ticket_ext_data, S2N_TICKET_SIZE_IN_BYTES));
-    GUARD_PTR(s2n_stuffer_init(&conn->client_ticket_to_decrypt, &blob));
+    S2N_BLOB_FROM_DATA_PTR(ticket_ext_data, conn->ticket_ext_data, S2N_TICKET_SIZE_IN_BYTES);
+    GUARD_PTR(s2n_stuffer_init(&conn->client_ticket_to_decrypt, &ticket_ext_data));
 
     /* Allocate long term key memory */
     GUARD_PTR(s2n_session_key_alloc(&conn->secure.client_key));
@@ -212,9 +208,8 @@ struct s2n_connection *s2n_connection_new(s2n_mode mode)
     /* Initialize the growable stuffers. Zero length at first, but the resize
      * in _wipe will fix that
      */
-    blob = (struct s2n_blob) {0};
-    GUARD_PTR(s2n_blob_init(&blob, conn->header_in_data, S2N_TLS_RECORD_HEADER_LENGTH));
-    GUARD_PTR(s2n_stuffer_init(&conn->header_in, &blob));
+    S2N_BLOB_FROM_DATA_PTR(header_in, conn->header_in_data, S2N_TLS_RECORD_HEADER_LENGTH);
+    GUARD_PTR(s2n_stuffer_init(&conn->header_in, &header_in));
     GUARD_PTR(s2n_stuffer_growable_alloc(&conn->out, 0));
     GUARD_PTR(s2n_stuffer_growable_alloc(&conn->in, 0));
     GUARD_PTR(s2n_stuffer_growable_alloc(&conn->handshake.io, 0));
