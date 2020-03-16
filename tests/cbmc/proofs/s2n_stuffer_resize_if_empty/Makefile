@@ -20,6 +20,7 @@ DEPENDENCIES += $(HELPERDIR)/source/proof_allocators.c
 DEPENDENCIES += $(SRCDIR)/stuffer/s2n_stuffer.c
 DEPENDENCIES += $(SRCDIR)/utils/s2n_blob.c
 DEPENDENCIES += $(SRCDIR)/utils/s2n_mem.c
+DEPENDENCIES += $(SRCDIR)/utils/s2n_safety.c
 
 ENTRY = s2n_stuffer_resize_if_empty_harness
 
